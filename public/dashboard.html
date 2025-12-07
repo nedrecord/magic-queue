@@ -4,16 +4,18 @@
   <meta charset="UTF-8">
   <title>Magician Queue</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="/style.css">
+  <!-- NOTE: static files are served from /public -->
+  <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
   <div class="container">
     <h1>Table Queue</h1>
 
     <div id="auth-section">
-      <h2>Login</h2>
+      <h2>Register or Login</h2>
       <input id="email" type="email" placeholder="Email">
       <input id="password" type="password" placeholder="Password">
+      <button id="register-btn">Register</button>
       <button id="login-btn">Log In</button>
       <p id="auth-message"></p>
     </div>
@@ -25,8 +27,9 @@
       </div>
       <ul id="queue-list"></ul>
     </div>
- </div>
+  </div>
 
-  <script src="/dashboard.js"></script>
+  <!-- NOTE: JS is also served from /public -->
+  <script src="/public/dashboard.js"></script>
 </body>
 </html>
