@@ -8,7 +8,6 @@ let isPaused = false;
 
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
-const registerBtn = document.getElementById('register-btn');
 const loginBtn = document.getElementById('login-btn');
 const authMessage = document.getElementById('auth-message');
 
@@ -60,49 +59,6 @@ function updatePauseUI() {
   }
 }
 
-registerBtn.addEventListener('click', async () => {
-  const email = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-
-  if (!email || !password) {
-    authMessage.textContent = 'Enter email and password.';
-    return;
-  }
-
-  registerBtn.disabled = true;
-  loginBtn.disabled = true;
-  authMessage.textContent = 'Registering...';
-
-  try {
-    const res = await fetch('/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await res.json();
-    if (!res.ok) {
-      authMessage.textContent = data.error || 'Registration failed.';
-      return;
-    }
-
-    authToken = data.token;
-    authMessage.textContent = 'Registered and logged in.';
-    authSection.classList.add('hidden');
-    postAuthSection.classList.remove('hidden');
-
-    showQueueView();
-    await loadQueue();
-    startAutoRefresh();
-  } catch (err) {
-    console.error(err);
-    authMessage.textContent = 'Network error.';
-  } finally {
-    registerBtn.disabled = false;
-    loginBtn.disabled = false;
-  }
-});
-
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
@@ -113,7 +69,6 @@ loginBtn.addEventListener('click', async () => {
   }
 
   loginBtn.disabled = true;
-  registerBtn.disabled = true;
   authMessage.textContent = 'Logging in...';
 
   try {
@@ -142,7 +97,6 @@ loginBtn.addEventListener('click', async () => {
     authMessage.textContent = 'Network error.';
   } finally {
     loginBtn.disabled = false;
-    registerBtn.disabled = false;
   }
 });
 
