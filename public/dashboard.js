@@ -1,5 +1,7 @@
 // public/dashboard.js
 
+console.log('dashboard.js loaded');
+
 let authToken = null;
 
 const emailInput = document.getElementById('email');
