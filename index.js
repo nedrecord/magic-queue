@@ -303,11 +303,11 @@ app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/', (req, res) => {
-  res.redirect('/dashboard');
+// simple admin page for creating magicians
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Magic queue server running on port ${PORT}`);
+app.get('/', (req, res) => {
+  res.redirect('/dashboard');
 });
