@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Magician Queue</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- NOTE: static files are served from /public -->
+  <!-- static files are served from /public -->
   <link rel="stylesheet" href="/public/style.css">
 </head>
 <body>
@@ -21,20 +21,26 @@
     </div>
 
     <div id="queue-section" class="hidden">
-      <div class="top-bar">
+      <div class="top-bar" style="align-items: center; gap: 8px;">
         <button id="refresh-btn">Refresh</button>
         <button id="download-qrs-btn">Download QR codes</button>
+
+        <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 4px; margin-left: 8px;">
+          <input type="checkbox" id="auto-refresh-checkbox">
+          Auto refresh
+        </label>
       </div>
+
       <ul id="queue-list"></ul>
-  
+
       <p style="margin-top: 16px; font-size: 0.9rem;">
-        Need printable table cards? 
+        Need printable table cards?
         <a href="/public/placards.html">Open placard generator</a>.
       </p>
     </div>
   </div>
 
-  <!-- NOTE: JS is also served from /public -->
+  <!-- JS is served from /public -->
   <script src="/public/dashboard.js"></script>
 </body>
 </html>
