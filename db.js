@@ -2,41 +2,27 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, 'magic-queue.db');
+const dbPath = path.join(__dirname, 'magic-queue.sqlite3');
+const db = new sqlite3.Database(dbPath);
 
-const db = new sqlite3.Database(DB_PATH);
-
-// Initialize tables
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS magicians (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS table_codes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      magician_id INTEGER NOT NULL,
-      table_number INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      UNIQUE (magician_id, table_number),
-      FOREIGN KEY (magician_id) REFERENCES magicians(id)
-    );
+      paused INTEGER NOT NULL DEFAULT 0
+    )
   `);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS summons (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
       magician_id INTEGER NOT NULL,
       table_number INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      UNIQUE (magician_id, table_number),
-      FOREIGN KEY (magician_id) REFERENCES magicians(id)
-    );
+      last_requested_at INTEGER NOT NULL,
+      PRIMARY KEY (magician_id, table_number),
+      FOREIGN KEY (magician_id) REFERENCES magicians(id) ON DELETE CASCADE
+    )
   `);
 });
 
