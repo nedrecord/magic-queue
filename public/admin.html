@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Magic Queue Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 16px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 16px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Magic Queue Admin</h1>
+  <p style="font-size: 0.9rem;">
+    Use this page to create magician accounts. Keep your admin secret safe.
+  </p>
+
+  <label for="admin-secret">Admin secret</label>
+  <input id="admin-secret" type="password" autocomplete="off">
+
+  <label for="email">Magician email</label>
+  <input id="email" type="email">
+
+  <label for="password">Magician password</label>
+  <input id="password" type="text" autocomplete="off">
+
+  <button id="create-btn">Create account</button>
+
+  <div id="result"></div>
+
+  <script>
+    const adminInput = document.getElementById('admin-secret');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const createBtn = document.getElementById('create-btn');
+    const resultDiv = document.getElementById('result');
+
+    createBtn.addEventListener('click', async () => {
+      const admin_secret = adminInput.value.trim();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!admin_secret || !email || !password) {
+        resultDiv.textContent = 'Fill in all fields.';
+        return;
+      }
+
+      createBtn.disabled = true;
+      resultDiv.textContent = 'Creating...';
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ admin_secret, email, password })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          resultDiv.textContent = data.error || 'Failed to create account.';
+          return;
+        }
+
+        resultDiv.textContent = 'Account created for ' + email + '.';
+      } catch (err) {
+        console.error(err);
+        resultDiv.textContent = 'Network error.';
+      } finally {
+        createBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
