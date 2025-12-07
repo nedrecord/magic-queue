@@ -38,11 +38,22 @@ function authRequired(req, res, next) {
 
 // ----------------- AUTH -----------------
 
+const ADMIN_SECRET = process.env.ADMIN_SECRET || null;
+
 app.post('/api/register', async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, admin_secret } = req.body || {};
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  if (!ADMIN_SECRET) {
+    console.error('ADMIN_SECRET is not configured.');
+    return res.status(500).json({ error: 'Registration is not configured.' });
+  }
+
+  if (!admin_secret || admin_secret !== ADMIN_SECRET) {
+    return res.status(403).json({ error: 'Unauthorized' });
   }
 
   try {
@@ -62,8 +73,10 @@ app.post('/api/register', async (req, res) => {
     );
 
     const magicianId = inserted.id;
+    // For admin use we don't actually need to auto-login the magician,
+    // but it's harmless to return a token if we want.
     const token = jwt.sign({ magicianId }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ token });
+    res.json({ token, magicianId });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ error: 'Database error' });
