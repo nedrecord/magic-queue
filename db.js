@@ -14,6 +14,7 @@ const pool = new Pool({
 });
 
 async function init() {
+  // magicians table
   await pool.query(`
     CREATE TABLE IF NOT EXISTS magicians (
       id SERIAL PRIMARY KEY,
@@ -23,6 +24,7 @@ async function init() {
     )
   `);
 
+  // summons table
   await pool.query(`
     CREATE TABLE IF NOT EXISTS summons (
       magician_id INTEGER NOT NULL,
@@ -44,17 +46,23 @@ init().catch((err) => {
   process.exit(1);
 });
 
+// Little helpers, modeled after sqlite-style get/all/run
+
 async function get(sql, params) {
+  // temporary debug log if we need it
+  // console.log('DB GET:', sql, params);
   const { rows } = await pool.query(sql, params);
   return rows[0] || null;
 }
 
 async function all(sql, params) {
+  // console.log('DB ALL:', sql, params);
   const { rows } = await pool.query(sql, params);
   return rows;
 }
 
 async function run(sql, params) {
+  // console.log('DB RUN:', sql, params);
   await pool.query(sql, params);
 }
 
