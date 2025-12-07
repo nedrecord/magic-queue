@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Placard Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Placard Generator</h1>
+    <p style="font-size: 0.9rem; line-height: 1.4;">
+      This tool runs entirely in your browser. Your Venmo/Zelle QR image is never uploaded to the server.
+    </p>
+
+    <h2>Details</h2>
+    <label for="magician-name" style="font-size: 0.9rem;">Your name (optional)</label>
+    <input id="magician-name" type="text" placeholder="e.g. Ned the Magician">
+
+    <label for="tip-line" style="font-size: 0.9rem;">Tip line text</label>
+    <input id="tip-line" type="text" value="Buy the magician a drink">
+
+    <label for="table-count" style="font-size: 0.9rem;">Number of tables (1–40)</label>
+    <input id="table-count" type="number" min="1" max="40" value="40">
+
+    <h2>Tip QR</h2>
+    <p style="font-size: 0.9rem; line-height: 1.4;">
+      Upload your Venmo/Zelle QR image (the one guests scan to tip you).
+    </p>
+    <input id="tip-qr-file" type="file" accept="image/*">
+
+    <div style="margin-top: 16px;">
+      <button id="generate-placards-btn">Generate placards ZIP</button>
+      <span id="status" style="margin-left: 8px; font-size: 0.9rem;"></span>
+    </div>
+
+    <p style="margin-top: 16px; font-size: 0.8rem; line-height: 1.4; opacity: 0.8;">
+      Each placard will include a labeled area for your summon QR (generated from the dashboard)
+      and your tip QR. You can print and cut them as needed.
+    </p>
+
+    <p style="margin-top: 8px;">
+      <a href="/dashboard" style="font-size: 0.9rem;">Back to dashboard</a>
+    </p>
+  </div>
+
+  <!-- Client-side ZIP + save libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="/public/placards.js"></script>
+</body>
+</html>
