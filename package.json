@@ -13,5 +13,7 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"
+    "qrcode": "^1.5.4",
+    "archiver": "^7.0.1"
   }
 }
