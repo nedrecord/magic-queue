@@ -36,120 +36,100 @@ function authRequired(req, res, next) {
   });
 }
 
-// auth routes
-app.post('/api/register', (req, res) => {
+// ----------------- AUTH -----------------
+
+app.post('/api/register', async (req, res) => {
   const { email, password } = req.body || {};
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
 
-  db.get(
-    'SELECT id FROM magicians WHERE email = ?',
-    [email],
-    async (err, existing) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (existing) {
-        return res.status(400).json({ error: 'Email already registered' });
-      }
-
-      try {
-        const hash = await bcrypt.hash(password, 10);
-        db.run(
-          'INSERT INTO magicians (email, password_hash) VALUES (?, ?)',
-          [email, hash],
-          function (err2) {
-            if (err2) {
-              console.error(err2);
-              return res.status(500).json({ error: 'Database error' });
-            }
-            const magicianId = this.lastID;
-            const token = jwt.sign({ magicianId }, JWT_SECRET, { expiresIn: '7d' });
-            res.json({ token });
-          }
-        );
-      } catch (hashErr) {
-        console.error(hashErr);
-        res.status(500).json({ error: 'Failed to hash password' });
-      }
+  try {
+    const existing = await db.get(
+      'SELECT id FROM magicians WHERE email = $1',
+      [email]
+    );
+    if (existing) {
+      return res.status(400).json({ error: 'Email already registered' });
     }
-  );
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const inserted = await db.get(
+      'INSERT INTO magicians (email, password_hash) VALUES ($1, $2) RETURNING id',
+      [email, hash]
+    );
+
+    const magicianId = inserted.id;
+    const token = jwt.sign({ magicianId }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token });
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
 
-  db.get(
-    'SELECT id, password_hash FROM magicians WHERE email = ?',
-    [email],
-    async (err, magician) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (!magician) {
-        return res.status(400).json({ error: 'Invalid email or password' });
-      }
-
-      try {
-        const ok = await bcrypt.compare(password, magician.password_hash);
-        if (!ok) {
-          return res.status(400).json({ error: 'Invalid email or password' });
-        }
-        const token = jwt.sign({ magicianId: magician.id }, JWT_SECRET, {
-          expiresIn: '7d'
-        });
-        res.json({ token });
-      } catch (cmpErr) {
-        console.error(cmpErr);
-        res.status(500).json({ error: 'Error verifying password' });
-      }
+  try {
+    const magician = await db.get(
+      'SELECT id, password_hash FROM magicians WHERE email = $1',
+      [email]
+    );
+    if (!magician) {
+      return res.status(400).json({ error: 'Invalid email or password' });
     }
-  );
+
+    const ok = await bcrypt.compare(password, magician.password_hash);
+    if (!ok) {
+      return res.status(400).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ magicianId: magician.id }, JWT_SECRET, {
+      expiresIn: '7d'
+    });
+    res.json({ token });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-// queue API
-app.get('/api/queue', authRequired, (req, res) => {
+// ----------------- QUEUE API -----------------
+
+app.get('/api/queue', authRequired, async (req, res) => {
   const magicianId = req.magicianId;
 
-  db.get(
-    'SELECT paused FROM magicians WHERE id = ?',
-    [magicianId],
-    (err, mrow) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (!mrow) {
-        return res.status(404).json({ error: 'Magician not found' });
-      }
-      const paused = !!mrow.paused;
-
-      db.all(
-        'SELECT table_number, last_requested_at FROM summons WHERE magician_id = ? ORDER BY last_requested_at ASC',
-        [magicianId],
-        (err2, rows) => {
-          if (err2) {
-            console.error(err2);
-            return res.status(500).json({ error: 'Database error' });
-          }
-          res.json({
-            paused,
-            summons: rows || []
-          });
-        }
-      );
+  try {
+    const mrow = await db.get(
+      'SELECT paused FROM magicians WHERE id = $1',
+      [magicianId]
+    );
+    if (!mrow) {
+      return res.status(404).json({ error: 'Magician not found' });
     }
-  );
+
+    const rows = await db.all(
+      'SELECT table_number, last_requested_at FROM summons WHERE magician_id = $1 ORDER BY last_requested_at ASC',
+      [magicianId]
+    );
+
+    res.json({
+      paused: !!mrow.paused,
+      summons: rows || []
+    });
+  } catch (err) {
+    console.error('Queue fetch error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.post('/api/queue/clear', authRequired, (req, res) => {
+app.post('/api/queue/clear', authRequired, async (req, res) => {
   const magicianId = req.magicianId;
   const { table_number } = req.body || {};
 
@@ -157,43 +137,41 @@ app.post('/api/queue/clear', authRequired, (req, res) => {
     return res.status(400).json({ error: 'table_number required' });
   }
 
-  db.run(
-    'DELETE FROM summons WHERE magician_id = ? AND table_number = ?',
-    [magicianId, table_number],
-    function (err) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json({ success: true });
-    }
-  );
+  try {
+    await db.run(
+      'DELETE FROM summons WHERE magician_id = $1 AND table_number = $2',
+      [magicianId, table_number]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Queue clear error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // pause / resume queue
-app.post('/api/pause', authRequired, (req, res) => {
+app.post('/api/pause', authRequired, async (req, res) => {
   const magicianId = req.magicianId;
   const { paused } = req.body || {};
+  const pausedValue = !!paused;
 
-  const pausedValue = paused ? 1 : 0;
-
-  db.run(
-    'UPDATE magicians SET paused = ? WHERE id = ?',
-    [pausedValue, magicianId],
-    function (err) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Database error' });
-      }
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Magician not found' });
-      }
-      res.json({ paused: !!pausedValue });
+  try {
+    const result = await db.pool.query(
+      'UPDATE magicians SET paused = $1 WHERE id = $2',
+      [pausedValue, magicianId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Magician not found' });
     }
-  );
+    res.json({ paused: pausedValue });
+  } catch (err) {
+    console.error('Pause error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-// QR ZIP endpoint
+// ----------------- QR ZIP -----------------
+
 app.get('/api/qrs/raw', authRequired, async (req, res) => {
   try {
     const magicianId = req.magicianId;
@@ -232,7 +210,7 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
 
     archive.finalize();
   } catch (err) {
-    console.error(err);
+    console.error('QR ZIP error:', err);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to generate QR ZIP' });
     } else {
@@ -241,8 +219,9 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
   }
 });
 
-// summon endpoint (scanned by guests)
-app.get('/summon', (req, res) => {
+// ----------------- SUMMON ENDPOINT -----------------
+
+app.get('/summon', async (req, res) => {
   const m = parseInt(req.query.m, 10);
   const t = parseInt(req.query.t, 10);
 
@@ -250,40 +229,33 @@ app.get('/summon', (req, res) => {
     return res.status(400).send('Bad request');
   }
 
-  db.get(
-    'SELECT id, paused FROM magicians WHERE id = ?',
-    [m],
-    (err, magician) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).send('Error');
-      }
-      if (!magician) {
-        return res.status(404).send('Magician not found');
-      }
+  try {
+    const magician = await db.get(
+      'SELECT id, paused FROM magicians WHERE id = $1',
+      [m]
+    );
+    if (!magician) {
+      return res.status(404).send('Magician not found');
+    }
 
-      const now = Date.now();
+    const now = Date.now();
 
-      db.run(
-        `
-        INSERT INTO summons (magician_id, table_number, last_requested_at)
-        VALUES (?, ?, ?)
-        ON CONFLICT(magician_id, table_number)
-        DO UPDATE SET last_requested_at = excluded.last_requested_at
-        `,
-        [m, t, now],
-        (err2) => {
-          if (err2) {
-            console.error(err2);
-            return res.status(500).send('Error logging summon');
-          }
+    await db.run(
+      `
+      INSERT INTO summons (magician_id, table_number, last_requested_at)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (magician_id, table_number)
+      DO UPDATE SET last_requested_at = EXCLUDED.last_requested_at
+      `,
+      [m, t, now]
+    );
 
-          const paused = !!magician.paused;
-          const message = paused
-            ? 'The magician is currently on a break, but will get to you when they are done.'
-            : 'The magic will begin soon.';
+    const paused = !!magician.paused;
+    const message = paused
+      ? 'The magician is currently on a break, but will get to you when they are done.'
+      : 'The magic will begin soon.';
 
-          const html = `<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
@@ -305,14 +277,15 @@ app.get('/summon', (req, res) => {
 </body>
 </html>`;
 
-          res.send(html);
-        }
-      );
-    }
-  );
+    res.send(html);
+  } catch (err) {
+    console.error('Summon error:', err);
+    res.status(500).send('Error');
+  }
 });
 
-// dashboard and root
+// ----------------- FRONTEND ROUTES -----------------
+
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
