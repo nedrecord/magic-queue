@@ -1,29 +1,66 @@
 // db.js
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = path.join(__dirname, 'magic-queue.sqlite3');
-const db = new sqlite3.Database(dbPath);
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not set. Set it in your Render environment.');
+  process.exit(1);
+}
 
-db.serialize(() => {
-  db.run(`
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+async function init() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS magicians (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      paused INTEGER NOT NULL DEFAULT 0
+      paused BOOLEAN NOT NULL DEFAULT FALSE
     )
   `);
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS summons (
       magician_id INTEGER NOT NULL,
       table_number INTEGER NOT NULL,
-      last_requested_at INTEGER NOT NULL,
+      last_requested_at BIGINT NOT NULL,
       PRIMARY KEY (magician_id, table_number),
-      FOREIGN KEY (magician_id) REFERENCES magicians(id) ON DELETE CASCADE
+      CONSTRAINT fk_magician
+        FOREIGN KEY (magician_id)
+        REFERENCES magicians(id)
+        ON DELETE CASCADE
     )
   `);
+
+  console.log('Database initialized');
+}
+
+init().catch((err) => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
 });
 
-module.exports = db;
+async function get(sql, params) {
+  const { rows } = await pool.query(sql, params);
+  return rows[0] || null;
+}
+
+async function all(sql, params) {
+  const { rows } = await pool.query(sql, params);
+  return rows;
+}
+
+async function run(sql, params) {
+  await pool.query(sql, params);
+}
+
+module.exports = {
+  pool,
+  get,
+  all,
+  run
+};
