@@ -12,6 +12,7 @@ const authSection = document.getElementById('auth-section');
 const queueSection = document.getElementById('queue-section');
 const queueList = document.getElementById('queue-list');
 const refreshBtn = document.getElementById('refresh-btn');
+const downloadQrsBtn = document.getElementById('download-qrs-btn');
 
 registerBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
@@ -99,6 +100,11 @@ refreshBtn.addEventListener('click', async () => {
   await loadQueue();
 });
 
+// NEW: hook up the download button
+downloadQrsBtn.addEventListener('click', async () => {
+  await downloadQrs();
+});
+
 async function loadQueue() {
   if (!authToken) return;
 
@@ -164,5 +170,47 @@ async function clearTable(tableNumber) {
   } catch (err) {
     console.error(err);
     alert('Network error.');
+  }
+}
+
+// NEW: download QR ZIP
+async function downloadQrs() {
+  if (!authToken) {
+    alert('Log in first.');
+    return;
+  }
+
+  downloadQrsBtn.disabled = true;
+  const originalText = downloadQrsBtn.textContent;
+  downloadQrsBtn.textContent = 'Preparing...';
+
+  try {
+    const res = await fetch('/api/qrs/raw', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert('Failed to download QR codes: ' + text);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'magic-queue-qrs.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('Network error while downloading QR codes.');
+  } finally {
+    downloadQrsBtn.disabled = false;
+    downloadQrsBtn.textContent = originalText;
   }
 }
