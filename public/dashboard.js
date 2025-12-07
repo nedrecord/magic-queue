@@ -3,6 +3,7 @@
 console.log('dashboard.js loaded');
 
 let authToken = null;
+let autoRefreshInterval = null;
 
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -15,6 +16,24 @@ const queueSection = document.getElementById('queue-section');
 const queueList = document.getElementById('queue-list');
 const refreshBtn = document.getElementById('refresh-btn');
 const downloadQrsBtn = document.getElementById('download-qrs-btn');
+const autoRefreshCheckbox = document.getElementById('auto-refresh-checkbox');
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  if (!authToken) return;
+  if (!autoRefreshCheckbox.checked) return;
+
+  autoRefreshInterval = setInterval(() => {
+    loadQueue();
+  }, 5000); // 5 seconds
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+  }
+}
 
 registerBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
@@ -48,6 +67,7 @@ registerBtn.addEventListener('click', async () => {
     queueSection.classList.remove('hidden');
 
     await loadQueue();
+    startAutoRefresh();
   } catch (err) {
     console.error(err);
     authMessage.textContent = 'Network error.';
@@ -89,6 +109,7 @@ loginBtn.addEventListener('click', async () => {
     queueSection.classList.remove('hidden');
 
     await loadQueue();
+    startAutoRefresh();
   } catch (err) {
     console.error(err);
     authMessage.textContent = 'Network error.';
@@ -102,7 +123,16 @@ refreshBtn.addEventListener('click', async () => {
   await loadQueue();
 });
 
-// NEW: hook up the download button
+// Toggle auto refresh on checkbox change
+autoRefreshCheckbox.addEventListener('change', () => {
+  if (autoRefreshCheckbox.checked) {
+    startAutoRefresh();
+  } else {
+    stopAutoRefresh();
+  }
+});
+
+// Download QR ZIP
 downloadQrsBtn.addEventListener('click', async () => {
   await downloadQrs();
 });
@@ -175,7 +205,6 @@ async function clearTable(tableNumber) {
   }
 }
 
-// NEW: download QR ZIP
 async function downloadQrs() {
   if (!authToken) {
     alert('Log in first.');
