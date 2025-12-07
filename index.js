@@ -15,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-this-secret';
 // Middleware
 app.use(bodyParser.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Simple auth middleware
 function authRequired(req, res, next) {
