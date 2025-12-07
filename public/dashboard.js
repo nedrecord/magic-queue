@@ -4,6 +4,7 @@ console.log('dashboard.js loaded');
 
 let authToken = null;
 let autoRefreshInterval = null;
+let isPaused = false;
 
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
@@ -12,26 +13,50 @@ const loginBtn = document.getElementById('login-btn');
 const authMessage = document.getElementById('auth-message');
 
 const authSection = document.getElementById('auth-section');
+const postAuthSection = document.getElementById('post-auth-section');
+
+const navQueueBtn = document.getElementById('nav-queue-btn');
+const navToolsBtn = document.getElementById('nav-tools-btn');
+
 const queueSection = document.getElementById('queue-section');
+const toolsSection = document.getElementById('tools-section');
+
 const queueList = document.getElementById('queue-list');
 const refreshBtn = document.getElementById('refresh-btn');
-const downloadQrsBtn = document.getElementById('download-qrs-btn');
-const autoRefreshCheckbox = document.getElementById('auto-refresh-checkbox');
 
-function startAutoRefresh() {
-  stopAutoRefresh();
-  if (!authToken) return;
-  if (!autoRefreshCheckbox.checked) return;
+const downloadQrsBtnTools = document.getElementById('download-qrs-btn-tools');
 
-  autoRefreshInterval = setInterval(() => {
-    loadQueue();
-  }, 5000); // 5 seconds
+const pauseBtn = document.getElementById('pause-btn');
+const pauseStatus = document.getElementById('pause-status');
+
+function showQueueView() {
+  queueSection.classList.remove('hidden');
+  toolsSection.classList.add('hidden');
 }
 
-function stopAutoRefresh() {
-  if (autoRefreshInterval) {
-    clearInterval(autoRefreshInterval);
-    autoRefreshInterval = null;
+function showToolsView() {
+  toolsSection.classList.remove('hidden');
+  queueSection.classList.add('hidden');
+}
+
+function startAutoRefresh() {
+  if (autoRefreshInterval) return;
+  autoRefreshInterval = setInterval(() => {
+    if (authToken) {
+      loadQueue();
+    }
+  }, 30000); // 30 seconds
+}
+
+function updatePauseUI() {
+  if (!pauseBtn || !pauseStatus) return;
+  if (isPaused) {
+    pauseBtn.textContent = 'Resume queue';
+    pauseStatus.textContent =
+      'Queue is paused. Guests see a break message when they scan.';
+  } else {
+    pauseBtn.textContent = 'Pause queue';
+    pauseStatus.textContent = 'Queue is live.';
   }
 }
 
@@ -64,8 +89,9 @@ registerBtn.addEventListener('click', async () => {
     authToken = data.token;
     authMessage.textContent = 'Registered and logged in.';
     authSection.classList.add('hidden');
-    queueSection.classList.remove('hidden');
+    postAuthSection.classList.remove('hidden');
 
+    showQueueView();
     await loadQueue();
     startAutoRefresh();
   } catch (err) {
@@ -106,8 +132,9 @@ loginBtn.addEventListener('click', async () => {
     authToken = data.token;
     authMessage.textContent = 'Logged in.';
     authSection.classList.add('hidden');
-    queueSection.classList.remove('hidden');
+    postAuthSection.classList.remove('hidden');
 
+    showQueueView();
     await loadQueue();
     startAutoRefresh();
   } catch (err) {
@@ -123,17 +150,46 @@ refreshBtn.addEventListener('click', async () => {
   await loadQueue();
 });
 
-// Toggle auto refresh on checkbox change
-autoRefreshCheckbox.addEventListener('change', () => {
-  if (autoRefreshCheckbox.checked) {
-    startAutoRefresh();
-  } else {
-    stopAutoRefresh();
+navQueueBtn.addEventListener('click', () => {
+  showQueueView();
+});
+
+navToolsBtn.addEventListener('click', () => {
+  showToolsView();
+});
+
+// Pause / resume queue
+pauseBtn.addEventListener('click', async () => {
+  if (!authToken) return;
+  const newPaused = !isPaused;
+
+  try {
+    const res = await fetch('/api/pause', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ paused: newPaused })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Failed to update pause state');
+      return;
+    }
+
+    isPaused = !!data.paused;
+    updatePauseUI();
+    await loadQueue();
+  } catch (err) {
+    console.error(err);
+    alert('Network error while updating pause state.');
   }
 });
 
-// Download QR ZIP
-downloadQrsBtn.addEventListener('click', async () => {
+// Download QR ZIP from tools page
+downloadQrsBtnTools.addEventListener('click', async () => {
   await downloadQrs();
 });
 
@@ -152,6 +208,9 @@ async function loadQueue() {
       queueList.innerHTML = `<li>Error: ${data.error || 'Failed to load'}</li>`;
       return;
     }
+
+    isPaused = !!data.paused;
+    updatePauseUI();
 
     queueList.innerHTML = '';
     if (!data.summons || data.summons.length === 0) {
@@ -211,9 +270,9 @@ async function downloadQrs() {
     return;
   }
 
-  downloadQrsBtn.disabled = true;
-  const originalText = downloadQrsBtn.textContent;
-  downloadQrsBtn.textContent = 'Preparing...';
+  downloadQrsBtnTools.disabled = true;
+  const originalText = downloadQrsBtnTools.textContent;
+  downloadQrsBtnTools.textContent = 'Preparing...';
 
   try {
     const res = await fetch('/api/qrs/raw', {
@@ -241,7 +300,7 @@ async function downloadQrs() {
     console.error(err);
     alert('Network error while downloading QR codes.');
   } finally {
-    downloadQrsBtn.disabled = false;
-    downloadQrsBtn.textContent = originalText;
+    downloadQrsBtnTools.disabled = false;
+    downloadQrsBtnTools.textContent = originalText;
   }
 }
