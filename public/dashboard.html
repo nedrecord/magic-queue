@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Magician Queue</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Table Queue</h1>
+
+    <div id="auth-section">
+      <h2>Login</h2>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
+      <button id="login-btn">Log In</button>
+      <p id="auth-message"></p>
+    </div>
+
+    <div id="queue-section" class="hidden">
+      <div class="top-bar">
+        <button id="refresh-btn">Refresh</button>
+      </div>
+      <ul id="queue-list"></ul>
+    </div>
+  </div>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>
