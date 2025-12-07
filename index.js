@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
+const QRCode = require('qrcode');
+const archiver = require('archiver');
 
 const db = require('./db');
 
@@ -111,6 +113,56 @@ app.post('/api/login', (req, res) => {
     const token = jwt.sign({ id: row.id, email }, JWT_SECRET, { expiresIn: '7d' });
     return res.json({ token, magicianId: row.id });
   });
+});
+
+// Download ZIP of 40 QR codes for this magician
+app.get('/api/qrs/raw', authRequired, async (req, res) => {
+  try {
+    const magicianId = req.magicianId;
+
+    // Build base URL from the current request (so it works on Render)
+    const host = req.headers.host;
+    const baseUrl = `https://${host}`;
+
+    // Set headers so browser downloads a file
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="magic-queue-qrs.zip"'
+    );
+
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => {
+      console.error(err);
+      // You can't send JSON now because headers are already set,
+      // but you can end the response.
+      res.status(500).end();
+    });
+
+    // Pipe the ZIP stream to the response
+    archive.pipe(res);
+
+    // Generate 40 QR PNGs and add them to the archive
+    for (let table = 1; table <= 40; table++) {
+      const url = `${baseUrl}/summon?m=${magicianId}&t=${table}`;
+      const pngBuffer = await QRCode.toBuffer(url, { type: 'png', margin: 1 });
+
+      archive.append(pngBuffer, {
+        name: `table-${String(table).padStart(2, '0')}.png`
+      });
+    }
+
+    // Finalize the archive (this sends the ZIP)
+    archive.finalize();
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate QR ZIP' });
+    } else {
+      res.status(500).end();
+    }
+  }
 });
 
 // Summon endpoint (public)
