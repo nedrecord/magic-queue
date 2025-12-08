@@ -14,32 +14,35 @@ function setStatus(msg) {
 }
 
 function getSelectedStyle() {
-  // Fallback to classic if the select doesn't exist for any reason
   if (!styleSelect) return 'classic';
   return styleSelect.value || 'classic';
 }
 
-generateBtn.addEventListener('click', async () => {
-  const file = fileInput.files[0];
-  if (!file) {
-    alert('Choose a QR ZIP file first.');
-    return;
-  }
+if (generateBtn) {
+  generateBtn.addEventListener('click', async () => {
+    const file = fileInput && fileInput.files[0];
+    if (!file) {
+      alert('Choose a QR ZIP file first.');
+      return;
+    }
 
-  setStatus('Generating placards...');
-  generateBtn.disabled = true;
+    setStatus('Generating placards...');
+    generateBtn.disabled = true;
 
-  try {
-    await generatePlacardsFromZip(file);
-    setStatus('Placards generated. Your ZIP should start downloading.');
-  } catch (err) {
-    console.error(err);
-    alert(err.message || 'Error generating placards.');
-    setStatus('Error generating placards. Check the ZIP format and try again.');
-  } finally {
-    generateBtn.disabled = false;
-  }
-});
+    try {
+      await generatePlacardsFromZip(file);
+      setStatus('Placards generated. Your ZIP should start downloading.');
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Error generating placards.');
+      setStatus('Error generating placards. Check the ZIP format and try again.');
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+} else {
+  console.error('generate-placards-btn not found on placards page.');
+}
 
 async function generatePlacardsFromZip(file) {
   if (typeof JSZip === 'undefined') {
@@ -51,7 +54,10 @@ async function generatePlacardsFromZip(file) {
 
   const outZip = new JSZip();
   const headerText =
-    (headerInput.value || 'Scan to have a magician visit your table').trim();
+    (headerInput && headerInput.value
+      ? headerInput.value
+      : 'Scan to have a magician visit your table'
+    ).trim();
 
   const style = getSelectedStyle();
 
@@ -65,7 +71,7 @@ async function generatePlacardsFromZip(file) {
     );
   }
 
-  // Keep stable order: table-01, table-02, ...
+  // deterministic order
   fileNames.sort((a, b) => {
     const ma = a.match(/table-(\d+)\.png/i);
     const mb = b.match(/table-(\d+)\.png/i);
@@ -123,25 +129,22 @@ function loadImageFromBlob(blob) {
 // ---- Canvas rendering with style variations ----
 
 async function renderPlacardPng({ qrImg, tableNum, headerText, style }) {
-  // 4x6 aspect at decent print resolution
-  const width = 1200;  // 6"
-  const height = 1800; // 9" (a little taller, still works fine on 4x6 when scaled)
+  const width = 1200;   // 6" wide @ ~200dpi
+  const height = 1800;  // 9" tall-ish, scales fine to 4x6
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // Base background: white for printing
+  // White background for printing
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // Shared layout coordinates
   const headerY = 150;
-  const qrSize = 650; // QR size; trimmed smaller than before
+  const qrSize = 650;
   const qrY = (height - qrSize) / 2;
   const tableY = height - 220;
 
-  // Draw different looks
   switch (style) {
     case 'border':
       drawBorderStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY);
@@ -163,32 +166,27 @@ async function renderPlacardPng({ qrImg, tableNum, headerText, style }) {
   });
 }
 
-// --- individual template drawers ---
+// --- template variants ---
 
 function drawClassicStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
 
-  // Header
   ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(headerText, width / 2, headerY);
 
-  // QR
   const qrX = (width - qrSize) / 2;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Table label
   ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
 }
 
 function drawBorderStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  // Light grey border
   ctx.strokeStyle = '#bbbbbb';
   ctx.lineWidth = 6;
   ctx.strokeRect(40, 40, width - 80, height - 80);
 
-  // Divider line above table text
   ctx.beginPath();
   ctx.moveTo(120, tableY - 40);
   ctx.lineTo(width - 120, tableY - 40);
@@ -197,15 +195,12 @@ function drawBorderStyle(ctx, width, height, headerText, headerY, qrImg, qrSize,
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
 
-  // Header
   ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(headerText, width / 2, headerY);
 
-  // QR
   const qrX = (width - qrSize) / 2;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Table label
   ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
 }
@@ -214,11 +209,9 @@ function drawFormalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize,
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
 
-  // Header in a more "formal" serif style
   ctx.font = 'italic 70px "Georgia", "Times New Roman", serif';
   ctx.fillText(headerText, width / 2, headerY);
 
-  // Simple flourish under header (black, printable)
   ctx.strokeStyle = '#000000';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -229,29 +222,23 @@ function drawFormalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize,
   ctx.quadraticCurveTo(fx + 90, fy - 20, fx + 180, fy);
   ctx.stroke();
 
-  // QR
   const qrX = (width - qrSize) / 2;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  // Table label
   ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
 }
 
 function drawMinimalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  // No borders, very plain
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'center';
 
-  // Header smaller and lighter
   ctx.font = '600 60px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(headerText, width / 2, headerY + 20);
 
-  // QR slightly lower
   const qrX = (width - qrSize) / 2;
   ctx.drawImage(qrImg, qrX, qrY + 40, qrSize, qrSize);
 
-  // Table label small
   ctx.font = '42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
   ctx.fillText(`Table ${tableNum}`, width / 2, tableY + 10);
 }
