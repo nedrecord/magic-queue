@@ -205,8 +205,7 @@ app.post('/api/pause', authRequired, async (req, res) => {
   }
 });
 
-// ----------------- PLACARD ZIP (50 PNG FILES) -----------------
-
+// ----------------- QR ZIP (RAW QR PNGS ONLY) -----------------
 app.get('/api/qrs/raw', authRequired, async (req, res) => {
   try {
     const magicianId = req.magicianId;
@@ -217,39 +216,41 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="summon-placards.zip"'
+      'attachment; filename="magic-queue-qrs.zip"'
     );
 
     const archive = archiver('zip', { zlib: { level: 9 } });
+
+    archive.on('error', (err) => {
+      console.error('QR ZIP archiver error:', err);
+      if (!res.headersSent) {
+        res.status(500).end();
+      }
+    });
+
     archive.pipe(res);
 
-    const { createCanvas, loadImage } = require('canvas');
-
+    // 50 raw QR PNGs: table-01.png ... table-50.png
     for (let table = 1; table <= 50; table++) {
-      const summonUrl = `${baseUrl}/summon?m=${magicianId}&t=${table}`;
-      const qrBuffer = await QRCode.toBuffer(summonUrl, { type: 'png', margin: 1 });
-
-      const canvas = createCanvas(1200, 1800);
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, 1200, 1800);
-
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 70px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Scan to have a magician", 600, 180);
-      ctx.fillText("visit your table.", 600, 260);
-
-      const qrImg = await loadImage(qrBuffer);
-      ctx.drawImage(qrImg, 350, 400, 500, 500);
-
-      ctx.font = "48px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-      ctx.fillText(`Table ${table}`, 600, 1680);
-
-      archive.append(canvas.toBuffer(), {
-        name: `placard-${String(table).padStart(2, "0")}.png`
+      const url = `${baseUrl}/summon?m=${magicianId}&t=${table}`;
+      const pngBuffer = await QRCode.toBuffer(url, {
+        type: 'png',
+        margin: 1
       });
+
+      archive.append(pngBuffer, {
+        name: `table-${String(table).padStart(2, '0')}.png`
+      });
+    }
+
+    archive.finalize();
+  } catch (err) {
+    console.error('QR ZIP error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to generate QR ZIP' });
+    }
+  }
+});
     }
 
     archive.finalize();
