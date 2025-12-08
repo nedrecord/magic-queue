@@ -254,6 +254,34 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
   }
 });
 
+// Single-table QR endpoint: returns a PNG for one table's summon URL
+app.get('/api/qrs/table/:table', authRequired, async (req, res) => {
+  const magicianId = req.magicianId;
+  const table = parseInt(req.params.table, 10);
+
+  if (!table || table < 1 || table > 50) {
+    return res.status(400).json({ error: 'Invalid table number' });
+  }
+
+  try {
+    const host = req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const baseUrl = `${proto}://${host}`;
+    const url = `${baseUrl}/summon?m=${magicianId}&t=${table}`;
+
+    const pngBuffer = await QRCode.toBuffer(url, {
+      type: 'png',
+      margin: 1
+    });
+
+    res.setHeader('Content-Type', 'image/png');
+    res.send(pngBuffer);
+  } catch (err) {
+    console.error('Single QR error:', err);
+    res.status(500).json({ error: 'Failed to generate QR' });
+  }
+});
+
 // ----------------- SUMMON ENDPOINT -----------------
 
 app.get('/summon', async (req, res) => {
