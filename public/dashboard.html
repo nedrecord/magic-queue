@@ -45,24 +45,35 @@
       </div>
 
             <!-- Tools view -->
-      <div id="tools-section" class="hidden">
-        <h2>QR &amp; Placard Tools</h2>
-
-        <p class="tools-text">
-          First, download the QR codes for your tables. You’ll use these images
-          on your own designs or in the Placard Generator.
-        </p>
-
-        <button id="download-qrs-btn-tools" class="action-btn">
-          Download QR Codes
-        </button>
-
-        <p class="tools-link">
-          Don’t want to design your own table signs? After downloading your QR
-          codes, open the <a href="/public/placards.html">Placard Generator</a>
-          to create ready-to-print cards.
-        </p>
-      </div>
+          <div id="tools-section" class="hidden">
+      <h2>QR &amp; Placard Tools</h2>
+    
+      <p class="tools-text">
+        First, download the QR codes for your tables. You’ll use these
+        images on your own designs or in the Placard Generator.
+      </p>
+    
+      <!-- First big red button -->
+      <button id="download-qrs-btn-tools" class="action-btn">
+        Download QR Codes
+      </button>
+    
+      <p class="tools-link">
+        Don’t want to design your own table signs? After downloading your
+        QR codes, open the Placard Generator to create ready-to-print cards.
+      </p>
+    
+      <!-- Second matching button instead of a text link -->
+      <button
+        id="open-placard-btn"
+        class="action-btn"
+        style="margin-top: 12px;"
+        type="button"
+        onclick="window.location.href='/public/placards.html'"
+      >
+        Open Placard Generator
+      </button>
+    </div>
 
       <!-- Account view -->
       <div id="account-section" class="hidden">
