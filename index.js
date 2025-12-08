@@ -113,6 +113,28 @@ function authRequired(req, res, next) {
   });
 }
 
+// ----------------- NEW: /api/me -----------------
+// Return the logged-in magician's ID + email for the placard generator.
+app.get('/api/me', authRequired, async (req, res) => {
+  const id = req.magicianId;
+
+  try {
+    const row = await db.get(
+      'SELECT id, email FROM magicians WHERE id = $1',
+      [id]
+    );
+
+    if (!row) {
+      return res.status(404).json({ error: 'Magician not found' });
+    }
+
+    res.json(row);
+  } catch (err) {
+    console.error('me endpoint error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // ----------------- QUEUE API -----------------
 
 app.get('/api/queue', authRequired, async (req, res) => {
