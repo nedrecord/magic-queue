@@ -1,111 +1,92 @@
+// public/placards.js
 console.log("placards.js loaded");
 
-const fileInput = document.getElementById("qr-zip");
-const headerInput = document.getElementById("header-text");
-const generateBtn = document.getElementById("generate-placards-btn");
-const statusEl = document.getElementById("placard-status");
+document.getElementById("generate-placards-btn").addEventListener("click", async () => {
+  const zipFile = document.getElementById("qr-zip").files[0];
+  const headerText = document.getElementById("header-text").value.trim() || "Scan to have a magician visit your table";
+  const status = document.getElementById("placard-status");
 
-// Main handler --------------------------------------------------
-
-generateBtn.addEventListener("click", async () => {
-  statusEl.textContent = "";
-
-  if (!fileInput.files || fileInput.files.length === 0) {
-    statusEl.textContent = "Choose a QR ZIP file first.";
+  if (!zipFile) {
+    status.textContent = "Choose a QR ZIP file first.";
     return;
   }
 
-  const zipFile = fileInput.files[0];
+  status.textContent = "Generating...";
 
   try {
     const jszip = new JSZip();
     const loadedZip = await jszip.loadAsync(zipFile);
 
-    // Extract QR PNGs
-    const qrMap = {};
-
-    for (const filename of Object.keys(loadedZip.files)) {
-      if (filename.toLowerCase().endsWith(".png")) {
-        const match = filename.match(/table-(\d+)\.png/i);
-        if (!match) continue;
-
-        const tableNum = parseInt(match[1], 10);
-        qrMap[tableNum] = await loadedZip.file(filename).async("base64");
-      }
-    }
-
-    if (Object.keys(qrMap).length === 0) {
-      statusEl.textContent = "No valid QR PNGs found in the ZIP.";
-      return;
-    }
-
-    const headerText = headerInput.value.trim() || 
-      "Scan to have a magician visit your table";
-
     const outZip = new JSZip();
 
-    // Create each placard using a simple white background and centered QR
-    for (let table = 1; table <= 50; table++) {
-      if (!qrMap[table]) continue;
+    for (const fileName of Object.keys(loadedZip.files)) {
+      if (!fileName.endsWith(".png")) continue;
 
-      const base64QR = qrMap[table];
-      const pngData = await createPlacardPNG(table, headerText, base64QR);
+      const tableMatch = fileName.match(/table-(\d+)\.png/i);
+      if (!tableMatch) continue;
 
-      outZip.file(`table-${String(table).padStart(2, "0")}.png`, pngData, {
-        base64: true
-      });
+      const tableNum = parseInt(tableMatch[1], 10);
+      const qrPng = await loadedZip.files[fileName].async("blob");
+
+      const placardBlob = await generatePlacard(qrPng, tableNum, headerText);
+      outZip.file(`placard-${tableNum}.png`, placardBlob);
     }
 
-    const blob = await outZip.generateAsync({ type: "blob" });
+    const finalZipBlob = await outZip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(finalZipBlob);
 
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    a.href = url;
     a.download = "Summon-Placards.zip";
-    document.body.appendChild(a);
     a.click();
-    a.remove();
+    URL.revokeObjectURL(url);
 
-    statusEl.textContent = "Placards generated!";
+    status.textContent = "Placards generated!";
   } catch (err) {
     console.error(err);
-    statusEl.textContent = "Error generating placards.";
+    status.textContent = "Error generating placards.";
   }
 });
 
-// Canvas renderer --------------------------------------------------
+async function generatePlacard(qrBlob, tableNum, headerText) {
+  return new Promise(resolve => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 1800;
 
-async function createPlacardPNG(tableNum, headerText, qrBase64) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1200;   // Print resolution base
-  canvas.height = 1800;
+    const ctx = canvas.getContext("2d");
 
-  const ctx = canvas.getContext("2d");
+    // White background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // White background
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Load QR
+    const qrImg = new Image();
+    qrImg.onload = () => {
 
-  // Header text
-  ctx.fillStyle = "#000000";
-  ctx.font = "bold 64px serif";
-  ctx.textAlign = "center";
-  ctx.fillText(headerText, canvas.width / 2, 200);
+      // ---- EXACT YESTERDAY LAYOUT (A) ----
+      // Header font slightly larger, positioned exactly like screenshot
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 80px Helvetica";
+      ctx.textAlign = "center";
 
-  // QR Image
-  const qrImg = new Image();
-  qrImg.src = "data:image/png;base64," + qrBase64;
+      // Header ~200 px from top (visually matching your screenshot)
+      ctx.fillText(headerText, 600, 220);
 
-  await qrImg.decode();
+      // QR code ~600px wide (visually matches yesterday)
+      const qrSize = 600;
+      const qrX = (1200 - qrSize) / 2;
+      const qrY = 450; // matches the screenshot proportions
 
-  const qrSize = 700;
-  const qrX = (canvas.width - qrSize) / 2;
-  const qrY = 350;
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+      // Table number small at the bottom center (unchanged from yesterday)
+      ctx.font = "bold 50px Helvetica";
+      ctx.fillText(`Table ${tableNum}`, 600, 1700);
 
-  // Table label
-  ctx.font = "48px serif";
-  ctx.fillText(`Table ${tableNum}`, canvas.width / 2, 1200);
+      canvas.toBlob(blob => resolve(blob), "image/png");
+    };
 
-  return canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
+    qrImg.src = URL.createObjectURL(qrBlob);
+  });
 }
