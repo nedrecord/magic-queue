@@ -47,8 +47,8 @@ function loadImageFromDataUrl(dataUrl) {
 
 async function generatePlacards() {
   const tableCount = parseInt(tableCountInput.value, 10);
-  if (!tableCount || tableCount < 1 || tableCount > 40) {
-    alert('Table count must be between 1 and 40.');
+  if (!tableCount || tableCount < 1 || tableCount > 50) {
+    alert('Table count must be between 1 and 50.');
     return;
   }
 
