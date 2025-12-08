@@ -113,8 +113,8 @@ function authRequired(req, res, next) {
   });
 }
 
-// ----------------- NEW: /api/me -----------------
-// Return the logged-in magician's ID + email for the placard generator.
+// ----------------- /api/me -----------------
+
 app.get('/api/me', authRequired, async (req, res) => {
   const id = req.magicianId;
 
@@ -206,6 +206,7 @@ app.post('/api/pause', authRequired, async (req, res) => {
 });
 
 // ----------------- QR ZIP (RAW QR PNGS ONLY) -----------------
+
 app.get('/api/qrs/raw', authRequired, async (req, res) => {
   try {
     const magicianId = req.magicianId;
@@ -248,17 +249,6 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
     console.error('QR ZIP error:', err);
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to generate QR ZIP' });
-    }
-  }
-});
-    }
-
-    archive.finalize();
-
-  } catch (err) {
-    console.error("Placard ZIP error:", err);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Failed to generate placards" });
     }
   }
 });
@@ -324,8 +314,8 @@ app.get('/summon', async (req, res) => {
 
     const paused = !!magician.paused;
 
-    const liveMsg = "The magician has received your request.";
-    const pausedMsg = "The magician is taking a brief pause and will visit when they return.";
+    const liveMsg = 'The magician has received your request.';
+    const pausedMsg = 'The magician is taking a brief pause and will visit when they return.';
 
     const flourish = `
       <div style="margin-top:20px; opacity:0.6;">
@@ -364,7 +354,6 @@ app.get('/summon', async (req, res) => {
   ${flourish}
 </body>
 </html>`;
-
     res.send(html);
   } catch (err) {
     console.error('Summon error:', err);
