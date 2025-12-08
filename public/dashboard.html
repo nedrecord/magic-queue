@@ -25,39 +25,65 @@
     <div id="post-auth-section" class="hidden">
       <!-- Tabs -->
       <div class="tabs-row">
-        <button id="nav-queue-btn" class="active-tab">Queue</button>
-        <button id="nav-tools-btn">QR &amp; Placards</button>
+        <button id="nav-queue-btn" class="tab-btn active-tab">Queue</button>
+        <button id="nav-tools-btn" class="tab-btn">QR &amp; Placards</button>
+        <button id="nav-account-btn" class="tab-btn">Account</button>
       </div>
 
-      <!-- Queue VIEW -->
+      <!-- Queue view -->
       <div id="queue-section">
         <ul id="queue-list"></ul>
 
-        <div class="pause-block">
+        <div class="queue-controls">
           <button id="pause-btn" class="action-btn">Pause queue</button>
-          <div id="pause-status" style="margin-top:8px;">Queue is live.</div>
+          <div id="pause-status" class="pause-status">
+            Queue is live.
+          </div>
         </div>
-
-        <button id="refresh-btn" class="action-btn">Refresh now</button>
-
-        <p class="auto-refresh-note">Queue auto-refreshes every 30 seconds.</p>
       </div>
 
-      <!-- Tools VIEW -->
+      <!-- Tools view -->
       <div id="tools-section" class="hidden">
-        <h2>QR &amp; Placard Tools</h2>
+        <h2>QR &amp; placard tools</h2>
+        <p class="tools-text">
+          Use these tools to set up your table signage. You only need to do this
+          when you start at a new venue or regenerate your QR codes.
+        </p>
 
         <button id="download-qrs-btn-tools" class="action-btn">
-          Download QR ZIP (50 PNGs)
+          Download summon QR ZIP
         </button>
 
-        <p class="tools-link" style="margin-top:20px;">
-          Need printable table cards?<br>
-          <a href="/public/placards.html">Open placard generator</a>
+        <p class="tools-link">
+          Need printable table cards?
+          <a href="/public/placards.html">Open placard generator</a>.
         </p>
       </div>
 
-      <button id="logout-btn" class="logout-btn">Log out</button>
+      <!-- Account view -->
+      <div id="account-section" class="hidden">
+        <h2>Account</h2>
+        <div class="account-line">
+          <span class="account-label">Email</span>
+          <span id="account-email" class="account-value">Loading…</span>
+        </div>
+
+        <div class="account-line">
+          <span class="account-label">Subscription</span>
+          <span id="account-subscription" class="account-value">
+            Early access beta – subscription not enforced yet.
+          </span>
+        </div>
+
+        <!-- Placeholder for future Stripe button -->
+        <!-- <button id="subscription-btn" class="action-btn">
+          Start / manage subscription
+        </button> -->
+
+        <div class="logout-row">
+          <button id="logout-btn" class="danger-btn">Log out</button>
+        </div>
+      </div>
     </div>
   </div>
 
