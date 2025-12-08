@@ -17,10 +17,10 @@ const authMessage = document.getElementById('auth-message');
 const authSection = document.getElementById('auth-section');
 const postAuthSection = document.getElementById('post-auth-section');
 
-// Tabs
-const navQueueBtn = document.getElementById('nav-queue-btn');
-const navToolsBtn = document.getElementById('nav-tools-btn');
-const navAccountBtn = document.getElementById('nav-account-btn');
+// Menu elements
+const menuBtn = document.getElementById('menu-btn');
+const menuPanel = document.getElementById('menu-panel');
+const menuItems = document.querySelectorAll('.menu-item');
 
 // Sections
 const queueSection = document.getElementById('queue-section');
@@ -40,17 +40,9 @@ const accountEmail = document.getElementById('account-email');
 const accountSubscription = document.getElementById('account-subscription');
 const logoutBtn = document.getElementById('logout-btn');
 
-// ---------- Tab helpers ----------
+// ---------- Section helper ----------
 
-function setActiveTab(name) {
-  const allTabs = [navQueueBtn, navToolsBtn, navAccountBtn];
-  allTabs.forEach((btn) => btn && btn.classList.remove('active-tab'));
-
-  if (name === 'queue' && navQueueBtn) navQueueBtn.classList.add('active-tab');
-  if (name === 'tools' && navToolsBtn) navToolsBtn.classList.add('active-tab');
-  if (name === 'account' && navAccountBtn) navAccountBtn.classList.add('active-tab');
-
-  // Show/hide sections
+function setActiveSection(name) {
   if (queueSection) queueSection.classList.add('hidden');
   if (toolsSection) toolsSection.classList.add('hidden');
   if (accountSection) accountSection.classList.add('hidden');
@@ -68,7 +60,7 @@ function startAutoRefresh() {
     if (authToken) {
       loadQueue();
     }
-  }, 30000); // 30 seconds
+  }, 30000);
 }
 
 function stopAutoRefresh() {
@@ -101,8 +93,9 @@ async function initFromStorage() {
   authToken = stored;
   authSection.classList.add('hidden');
   postAuthSection.classList.remove('hidden');
+  menuBtn.classList.remove('hidden');
 
-  setActiveTab('queue');
+  setActiveSection('queue');
   startAutoRefresh();
 
   try {
@@ -146,8 +139,9 @@ loginBtn.addEventListener('click', async () => {
     authMessage.textContent = 'Logged in.';
     authSection.classList.add('hidden');
     postAuthSection.classList.remove('hidden');
+    menuBtn.classList.remove('hidden');
 
-    setActiveTab('queue');
+    setActiveSection('queue');
     startAutoRefresh();
 
     await Promise.all([loadQueue(), loadAccountInfo()]);
@@ -159,18 +153,24 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-// ---------- Nav events ----------
+// ---------- Menu behaviour ----------
 
-navQueueBtn.addEventListener('click', () => {
-  setActiveTab('queue');
+menuBtn.addEventListener('click', () => {
+  if (!menuPanel) return;
+  const isHidden = menuPanel.classList.contains('hidden');
+  if (isHidden) {
+    menuPanel.classList.remove('hidden');
+  } else {
+    menuPanel.classList.add('hidden');
+  }
 });
 
-navToolsBtn.addEventListener('click', () => {
-  setActiveTab('tools');
-});
-
-navAccountBtn.addEventListener('click', () => {
-  setActiveTab('account');
+menuItems.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const target = btn.getAttribute('data-target') || 'queue';
+    setActiveSection(target);
+    if (menuPanel) menuPanel.classList.add('hidden');
+  });
 });
 
 // ---------- Pause queue ----------
@@ -225,6 +225,9 @@ function performLogout(silent = false) {
     emailInput.value = '';
     passwordInput.value = '';
   }
+
+  if (menuPanel) menuPanel.classList.add('hidden');
+  menuBtn.classList.add('hidden');
 }
 
 logoutBtn.addEventListener('click', () => {
@@ -378,7 +381,6 @@ async function loadAccountInfo() {
       accountEmail.textContent = data.email || '(unknown)';
     }
 
-    // Subscription text is static for now; real logic will change this later.
     if (accountSubscription) {
       accountSubscription.textContent =
         'Early access beta – subscription billing not active yet.';
@@ -392,7 +394,6 @@ async function loadAccountInfo() {
 
 initFromStorage();
 
-// Register a very simple service worker for PWA install
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
