@@ -602,3 +602,31 @@ body.placard-page {
   margin-top: 8px;
   font-size: 0.9rem;
 }
+
+.center {
+  text-align: center !important;
+}
+
+.placard-container h1,
+.placard-subtitle,
+.status-message {
+  text-align: center;
+}
+
+.form-row {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.file-input,
+.text-input {
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
