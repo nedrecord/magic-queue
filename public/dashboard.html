@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Magician Queue</title>
+  <title>Summon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111111">
+  <meta name="theme-color" content="#000000">
   <link rel="manifest" href="/manifest.json">
   <link rel="stylesheet" href="/public/style.css">
 </head>
-  
-  <body>
+<body>
   <div class="container">
-    <h1>Magic Queue</h1>
+    <h1>SUMMON</h1>
 
+    <!-- Login -->
     <div id="auth-section">
       <h2>Log in</h2>
       <input id="email" type="email" placeholder="Email">
@@ -21,30 +21,34 @@
       <p id="auth-message"></p>
     </div>
 
+    <!-- After login -->
     <div id="post-auth-section" class="hidden">
-      <div class="top-bar" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-        <button id="nav-queue-btn">Queue</button>
+      <!-- Tabs -->
+      <div class="tabs-row">
+        <button id="nav-queue-btn" class="active-tab">Queue</button>
         <button id="nav-tools-btn">QR & placards</button>
-        <span style="font-size:0.8rem; opacity:0.8; margin-left:8px;">
-          Queue auto-refreshes every 30 seconds.
-        </span>
-        <div style="flex:1;"></div>
-        <button id="logout-btn" style="font-size:0.8rem;">Log out</button>
       </div>
 
+      <!-- Auto-refresh note -->
+      <p class="auto-refresh-note">
+        Queue auto-refreshes every 30 seconds.
+      </p>
+
+      <!-- Queue view -->
       <div id="queue-section">
-        <div class="top-bar" style="align-items:center; gap:8px;">
+        <div class="queue-controls">
           <button id="refresh-btn">Refresh now</button>
         </div>
 
-        <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+        <div class="pause-row">
           <button id="pause-btn">Pause queue</button>
-          <span id="pause-status" style="font-size:0.85rem; opacity:0.9;">Queue is live.</span>
+          <span id="pause-status">Queue is live.</span>
         </div>
 
         <ul id="queue-list" style="margin-top:12px;"></ul>
       </div>
 
+      <!-- Tools view -->
       <div id="tools-section" class="hidden">
         <h2>QR & placard tools</h2>
         <p style="font-size:0.9rem; line-height:1.4;">
@@ -58,6 +62,11 @@
           Need printable table cards?
           <a href="/public/placards.html">Open placard generator</a>.
         </p>
+      </div>
+
+      <!-- Logout at bottom -->
+      <div class="logout-row">
+        <button id="logout-btn">Log out</button>
       </div>
     </div>
   </div>
