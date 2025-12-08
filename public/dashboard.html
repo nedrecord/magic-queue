@@ -36,18 +36,27 @@
 
       <!-- Queue view -->
       <div id="queue-section">
-        <div class="queue-controls">
-          <button id="refresh-btn">Refresh now</button>
+      
+        <div class="queue-card">
+          <div class="queue-controls">
+            <button id="refresh-btn">Refresh now</button>
+          </div>
+      
+          <div class="pause-row">
+            <button id="pause-btn">Pause queue</button>
+            <span id="pause-status">Queue is live.</span>
+          </div>
+      
+          <ul id="queue-list" style="margin-top:12px;"></ul>
+      
+          <!-- Auto-refresh line (now at the bottom) -->
+          <p class="auto-refresh-note bottom-note">
+            Queue auto-refreshes every 30 seconds.
+          </p>
         </div>
-
-        <div class="pause-row">
-          <button id="pause-btn">Pause queue</button>
-          <span id="pause-status">Queue is live.</span>
-        </div>
-
-        <ul id="queue-list" style="margin-top:12px;"></ul>
+      
       </div>
-
+      
       <!-- Tools view -->
       <div id="tools-section" class="hidden">
         <h2>QR & placard tools</h2>
