@@ -18,7 +18,7 @@ body {
   min-height: 100vh;
 }
 
-/* Main wrapper – no big grey bubble */
+/* Main wrapper */
 .container {
   width: 100%;
   max-width: 480px;
@@ -53,14 +53,6 @@ h2 {
   justify-content: center;
   gap: 8px;
   margin-top: 4px;
-}
-
-/* Auto-refresh note */
-.auto-refresh-note {
-  margin: 6px 0 12px;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #cccccc;
 }
 
 /* Inputs */
@@ -122,7 +114,7 @@ button:active:not(:disabled) {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Tabs & secondary controls default dark */
+/* Tabs & secondary buttons default dark */
 .tabs-row button,
 .queue-controls button,
 .pause-row button,
@@ -146,9 +138,18 @@ button:active:not(:disabled) {
   color: #ffb74d;
 }
 
-/* Queue controls */
+/* Queue card – grey bubble */
+.queue-card {
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 18px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+/* Queue controls and pause row */
 .queue-controls {
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .pause-row {
@@ -178,12 +179,20 @@ button:active:not(:disabled) {
   padding: 8px 10px;
   margin-bottom: 8px;
   border-radius: 10px;
-  background: #1a1a1a;
+  background: #101010;
   border: 1px solid #333333;
 }
 
 .queue-item span {
   font-size: 0.95rem;
+}
+
+/* Auto-refresh text, at bottom of queue card */
+.auto-refresh-note {
+  font-size: 0.8rem;
+  color: #cccccc;
+  margin: 14px 0 0 0;
+  text-align: left;
 }
 
 /* Tools section */
@@ -211,6 +220,15 @@ a:hover {
 /* Utility */
 .hidden {
   display: none !important;
+}
+
+/* Admin page tweak (if you ever use body.admin-page) */
+body.admin-page {
+  padding-top: 24px;
+}
+
+body.admin-page .container {
+  max-width: 520px;
 }
 
 /* Small screens */
