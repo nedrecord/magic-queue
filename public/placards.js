@@ -1,103 +1,81 @@
-// public/placards.js
+let qrImages = {};
 
-(function () {
-  const zipInput = document.getElementById('zip-input');
-  const headerInput = document.getElementById('placard-header');
-  const generateBtn = document.getElementById('generate-placards-btn');
-  const statusEl = document.getElementById('placard-status');
-  const gridEl = document.getElementById('placard-grid');
+document.getElementById('qr-zip-input').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-  async function handleGenerate() {
-    const file = zipInput.files && zipInput.files[0];
-    if (!file) {
-      statusEl.textContent = 'Select the QR ZIP file first.';
-      return;
-    }
+  qrImages = {};
+  const zip = new JSZip();
+  const contents = await zip.loadAsync(file);
 
-    const headerText =
-      (headerInput.value && headerInput.value.trim()) ||
-      'Scan to have a magician visit your table.';
+  const entries = Object.keys(contents.files);
 
-    statusEl.textContent = 'Reading ZIP...';
-    gridEl.innerHTML = '';
-    generateBtn.disabled = true;
-
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-
-      // We expect files named table-01.png, table-02.png, ... table-50.png
-      const cards = [];
-
-      for (let table = 1; table <= 50; table++) {
-        const filename = `table-${String(table).padStart(2, '0')}.png`;
-        const entry = zip.file(filename);
-
-        if (!entry) {
-          console.warn('Missing file in ZIP:', filename);
-          // We’ll create a blank card with no QR but keep the slot
-        }
-
-        cards.push({ table, entry });
-      }
-
-      statusEl.textContent = 'Generating cards...';
-
-      for (const cardInfo of cards) {
-        const { table, entry } = cardInfo;
-
-        const card = document.createElement('div');
-        card.className = 'placard-card';
-
-        // Header text at top
-        const header = document.createElement('div');
-        header.className = 'placard-header-text';
-        header.textContent = headerText;
-
-        // Middle: QR image (if present)
-        const qrWrapper = document.createElement('div');
-        qrWrapper.className = 'placard-qr-wrapper';
-
-        if (entry) {
-          const blob = await entry.async('blob');
-          const url = URL.createObjectURL(blob);
-
-          const img = document.createElement('img');
-          img.className = 'placard-qr-img';
-          img.alt = `QR for table ${table}`;
-          img.src = url;
-
-          qrWrapper.appendChild(img);
-        } else {
-          const missing = document.createElement('div');
-          missing.textContent = 'QR missing';
-          missing.style.fontSize = '0.8rem';
-          qrWrapper.appendChild(missing);
-        }
-
-        // Bottom: table number
-        const tableLabel = document.createElement('div');
-        tableLabel.className = 'placard-table-label';
-        tableLabel.textContent = 'Table ' + table;
-
-        card.appendChild(header);
-        card.appendChild(qrWrapper);
-        card.appendChild(tableLabel);
-
-        gridEl.appendChild(card);
-      }
-
-      statusEl.textContent =
-        'Placards generated. Print this page (or save as PDF) on 4"x6" card stock.';
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = 'Error reading ZIP or generating cards.';
-    } finally {
-      generateBtn.disabled = false;
+  for (const name of entries) {
+    if (name.endsWith('.png')) {
+      const blob = await contents.files[name].async('blob');
+      qrImages[name] = URL.createObjectURL(blob);
     }
   }
 
-  if (generateBtn) {
-    generateBtn.addEventListener('click', handleGenerate);
+  alert('QR images loaded. Ready to generate placards.');
+});
+
+document.getElementById('generate-placards-btn').addEventListener('click', async () => {
+  if (Object.keys(qrImages).length === 0) {
+    alert('Upload QR ZIP first.');
+    return;
   }
-})();
+
+  const header = document.getElementById('header-text').value.trim() || '';
+
+  for (let table = 1; table <= 50; table++) {
+    const key = `table-${String(table).padStart(2, '0')}.png`;
+    const qrUrl = qrImages[key];
+    if (!qrUrl) continue;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 900;
+    canvas.height = 1350;
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Header
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 48px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText(header, canvas.width / 2, 120);
+
+    // QR image
+    const img = new Image();
+    img.src = qrUrl;
+
+    await new Promise((resolve) => {
+      img.onload = resolve;
+    });
+
+    const qrSize = 500;
+    ctx.drawImage(
+      img,
+      (canvas.width - qrSize) / 2,
+      250,
+      qrSize,
+      qrSize
+    );
+
+    // Table number
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 40px system-ui';
+    ctx.fillText(`Table ${table}`, canvas.width / 2, 1250);
+
+    // Download PNG
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `placard-${table}.png`;
+    a.click();
+  }
+
+  alert('All placards generated.');
+});
