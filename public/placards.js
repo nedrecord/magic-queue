@@ -136,7 +136,7 @@ async function generateBatchPlacards() {
     const downloadUrl = URL.createObjectURL(placardZipBlob);
     const a = document.createElement('a');
     a.href = downloadUrl;
-    a.download = 'summon-placards.zip';
+    a.download = 'Summon-Placards.zip';
     document.body.appendChild(a);
     a.click();
     a.remove();
