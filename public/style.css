@@ -18,21 +18,17 @@ body {
   min-height: 100vh;
 }
 
-/* Main card */
+/* Main wrapper – no big grey bubble */
 .container {
   width: 100%;
   max-width: 480px;
-  background: #111111;
-  border-radius: 16px;
-  padding: 18px 16px 22px;
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
-  border: 1px solid #222222;
+  padding: 18px 16px 24px;
 }
 
 /* Headings */
 h1 {
   margin: 0 0 12px 0;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   text-align: center;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -49,6 +45,22 @@ h2 {
 #auth-section,
 #post-auth-section {
   margin-top: 8px;
+}
+
+/* Tabs row */
+.tabs-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Auto-refresh note */
+.auto-refresh-note {
+  margin: 6px 0 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #cccccc;
 }
 
 /* Inputs */
@@ -110,18 +122,18 @@ button:active:not(:disabled) {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Tabs and secondary buttons share base, but default darker */
-.top-bar button,
-#pause-btn,
-#refresh-btn,
-#logout-btn {
+/* Tabs & secondary controls default dark */
+.tabs-row button,
+.queue-controls button,
+.pause-row button,
+.logout-row button {
   background: #222222;
   border: 1px solid #444444;
   box-shadow: none;
 }
 
-/* Active tab highlight */
-.top-bar button.active-tab {
+/* Active tab = red */
+.tabs-row button.active-tab {
   background: #e53935;
   border-color: #e53935;
 }
@@ -134,6 +146,18 @@ button:active:not(:disabled) {
   color: #ffb74d;
 }
 
+/* Queue controls */
+.queue-controls {
+  margin-top: 4px;
+}
+
+.pause-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Pause status text */
 #pause-status {
   color: #dddddd;
@@ -144,7 +168,7 @@ button:active:not(:disabled) {
 #queue-list {
   list-style: none;
   padding: 0;
-  margin: 14px 0 0 0;
+  margin: 12px 0 0 0;
 }
 
 .queue-item {
@@ -167,6 +191,13 @@ button:active:not(:disabled) {
   margin-top: 6px;
 }
 
+/* Logout row at bottom */
+.logout-row {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
 /* Links */
 a {
   color: #ff5252;
@@ -182,15 +213,6 @@ a:hover {
   display: none !important;
 }
 
-/* Admin page tweak (if you ever use body.admin-page) */
-body.admin-page {
-  padding-top: 24px;
-}
-
-body.admin-page .container {
-  max-width: 520px;
-}
-
 /* Small screens */
 @media (max-width: 480px) {
   .container {
@@ -198,10 +220,6 @@ body.admin-page .container {
   }
 
   h1 {
-    font-size: 1.3rem;
-  }
-
-  .top-bar {
-    flex-wrap: wrap;
+    font-size: 1.4rem;
   }
 }
