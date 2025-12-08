@@ -2,35 +2,14 @@
 
 console.log('placards.js loaded');
 
-const TOKEN_KEY = 'magicQueueToken';
-
+const zipInput = document.getElementById('placard-zip-file');
 const headerInput = document.getElementById('placard-header');
-const tableSelect = document.getElementById('placard-table');
-const generateBtn = document.getElementById('placard-generate-btn');
+const generateBatchBtn = document.getElementById('placard-generate-batch-btn');
 const statusEl = document.getElementById('placard-status');
 const canvas = document.getElementById('placard-canvas');
 const ctx = canvas.getContext('2d');
 
-// Build table dropdown 1–50
-(function initTableOptions() {
-  for (let i = 1; i <= 50; i++) {
-    const opt = document.createElement('option');
-    opt.value = String(i);
-    opt.textContent = `Table ${i}`;
-    tableSelect.appendChild(opt);
-  }
-})();
-
-// Grab token from same storage as dashboard
-function getToken() {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) {
-    return null;
-  }
-  return token;
-}
-
-// Centered text helper
+// Helper: centered text
 function drawCenteredText(text, y, fontSizePx, weight = 'normal') {
   ctx.font = `${weight} ${fontSizePx}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
   ctx.textAlign = 'center';
@@ -39,87 +18,136 @@ function drawCenteredText(text, y, fontSizePx, weight = 'normal') {
   ctx.fillText(text, canvas.width / 2, y);
 }
 
-async function generatePlacard() {
+// Draw a single placard for one table, given a QR Image object
+async function drawPlacardForTable(headerText, tableNumber, qrImage) {
+  // White background
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Header at top
+  drawCenteredText(headerText, 200, 60, '600');
+
+  // QR in the middle
+  const qrSize = 900;
+  const qrX = (canvas.width - qrSize) / 2;
+  const qrY = 450;
+  ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+  // Table number near bottom
+  const label = `Table ${tableNumber}`;
+  drawCenteredText(label, 1700, 36, '500');
+
+  // Convert canvas to blob
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Failed to create PNG blob.'));
+      } else {
+        resolve(blob);
+      }
+    }, 'image/png');
+  });
+}
+
+async function generateBatchPlacards() {
   statusEl.textContent = '';
-  const token = getToken();
-  if (!token) {
-    statusEl.textContent = 'Not logged in. Open the main app and log in first.';
+
+  const file = zipInput.files && zipInput.files[0];
+  if (!file) {
+    statusEl.textContent = 'Choose the QR ZIP file first.';
     return;
   }
 
-  const headerText = headerInput.value.trim() || 'Scan to have a magician visit your table';
-  const table = parseInt(tableSelect.value, 10) || 1;
+  const headerText =
+    headerInput.value.trim() || 'Scan to have a magician visit your table';
 
-  generateBtn.disabled = true;
-  const originalLabel = generateBtn.textContent;
-  generateBtn.textContent = 'Generating...';
-  statusEl.textContent = '';
+  generateBatchBtn.disabled = true;
+  const originalLabel = generateBatchBtn.textContent;
+  generateBatchBtn.textContent = 'Generating...';
+  statusEl.textContent = 'Reading QR ZIP...';
 
   try {
-    // 1) Fetch QR PNG for this table
-    const res = await fetch(`/api/qrs/table/${table}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
+    // 1) Load ZIP with JSZip
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+
+    // 2) Collect entries that look like table-XX.png
+    const qrEntries = [];
+    zip.forEach((relativePath, entry) => {
+      const match = relativePath.match(/table-(\d+)\.png$/i);
+      if (match) {
+        const tableNum = parseInt(match[1], 10);
+        if (!isNaN(tableNum)) {
+          qrEntries.push({ table: tableNum, entry });
+        }
       }
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`QR fetch failed: ${txt}`);
+    if (qrEntries.length === 0) {
+      statusEl.textContent = 'No QR files named like table-01.png found in ZIP.';
+      generateBatchBtn.disabled = false;
+      generateBatchBtn.textContent = originalLabel;
+      return;
     }
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    // Sort by table number
+    qrEntries.sort((a, b) => a.table - b.table);
 
-    // 2) Load QR image
-    const img = new Image();
-    img.src = url;
+    statusEl.textContent = `Found ${qrEntries.length} QR images. Building placards...`;
 
-    await new Promise((resolve, reject) => {
-      img.onload = () => resolve();
-      img.onerror = (e) => reject(e);
-    });
+    // 3) Create new ZIP for placards
+    const outZip = new JSZip();
 
-    // 3) Draw card: 1200 x 1800 (rough 4x6 portrait)
-    // White background
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Process sequentially to keep memory under control
+    for (let i = 0; i < qrEntries.length; i++) {
+      const { table, entry } = qrEntries[i];
+      statusEl.textContent = `Building placard for table ${table} (${i + 1}/${qrEntries.length})...`;
 
-    // Header text at top, centered
-    drawCenteredText(headerText, 200, 60, '600');
+      // Load QR as an Image
+      const qrBlob = await entry.async('blob');
+      const qrUrl = URL.createObjectURL(qrBlob);
+      const img = new Image();
+      img.src = qrUrl;
 
-    // QR in the middle
-    const qrSize = 900; // large and clean
-    const qrX = (canvas.width - qrSize) / 2;
-    const qrY = 450;
-    ctx.drawImage(img, qrX, qrY, qrSize, qrSize);
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = (e) => reject(e);
+      });
 
-    // Table number small at bottom center
-    const tableLabel = `Table ${table}`;
-    drawCenteredText(tableLabel, 1700, 36, '500');
+      // Draw placard + get PNG blob
+      const placardBlob = await drawPlacardForTable(headerText, table, img);
 
-    URL.revokeObjectURL(url);
+      URL.revokeObjectURL(qrUrl);
 
-    // 4) Download PNG
-    const dataUrl = canvas.toDataURL('image/png');
+      // Add to new ZIP
+      const outName = `placard-table-${String(table).padStart(2, '0')}.png`;
+      outZip.file(outName, placardBlob);
+    }
+
+    statusEl.textContent = 'Packaging placards ZIP...';
+
+    // 4) Generate final ZIP and trigger download
+    const placardZipBlob = await outZip.generateAsync({ type: 'blob' });
+    const downloadUrl = URL.createObjectURL(placardZipBlob);
     const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `placard-table-${String(table).padStart(2, '0')}.png`;
+    a.href = downloadUrl;
+    a.download = 'summon-placards.zip';
     document.body.appendChild(a);
     a.click();
     a.remove();
+    URL.revokeObjectURL(downloadUrl);
 
-    statusEl.textContent = `Placard downloaded for Table ${table}.`;
+    statusEl.textContent = 'Placard ZIP downloaded.';
   } catch (err) {
-    console.error('Placard generation error:', err);
-    statusEl.textContent = 'Error generating placard. Try again.';
+    console.error('Placard batch error:', err);
+    statusEl.textContent = 'Error generating placards. Check the ZIP format and try again.';
   } finally {
-    generateBtn.disabled = false;
-    generateBtn.textContent = originalLabel;
+    generateBatchBtn.disabled = false;
+    generateBatchBtn.textContent = originalLabel;
   }
 }
 
-generateBtn.addEventListener('click', (e) => {
+generateBatchBtn.addEventListener('click', (e) => {
   e.preventDefault();
-  generatePlacard();
+  generateBatchPlacards();
 });
