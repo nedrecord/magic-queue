@@ -199,7 +199,7 @@ body.placard-page {
 
 /* Header text at top of placard */
 .placard-header-text {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 8px;
 }
@@ -219,7 +219,7 @@ body.placard-page {
 
 /* Table number at bottom */
 .placard-table-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   margin-top: 10px;
-  font-weight: 600;
+  font-weight: 500;
 }
