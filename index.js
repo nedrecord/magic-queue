@@ -315,45 +315,59 @@ app.get('/summon', async (req, res) => {
     const paused = !!magician.paused;
 
     const liveMsg = 'The magician has received your request.';
-    const pausedMsg = 'The magician is taking a brief pause and will visit when they return.';
+    const pausedMsg =
+      'The magician is taking a brief pause and will visit when they return.';
 
-    const flourish = `
-      <div style="margin-top:20px; opacity:0.6;">
-        <svg width="180" height="40" viewBox="0 0 180 40">
-          <path d="M10 20 Q40 0 70 20 T130 20 T170 20"
-                stroke="white" fill="transparent" stroke-width="2"/>
-        </svg>
-      </div>
-    `;
-
-    const html = `
-<!DOCTYPE html>
+    const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Summon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body {
-      background: #1b1b1b;
-      color: #e6e6e6;
+      background: #111111;
+      color: #f3f3f3;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       text-align: center;
-      padding: 40px 20px;
+      padding: 48px 24px;
     }
-    p {
-      font-size: 1.6rem;
+
+    .line {
+      font-family: "Snell Roundhand", "Brush Script MT", "Segoe Script",
+                   "Comic Sans MS", cursive;
+      font-size: 1.9rem;
       font-weight: 500;
-      margin-bottom: 10px;
+      letter-spacing: 0.03em;
       line-height: 1.4;
+      margin: 0 auto 24px auto;
+      max-width: 22ch;
+    }
+
+    .flourish {
+      margin-top: 12px;
+      display: inline-block;
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
-  <p>${paused ? pausedMsg : liveMsg}</p>
-  ${flourish}
+  <p class="line">${paused ? pausedMsg : liveMsg}</p>
+  <div class="flourish">
+    <svg width="200" height="40" viewBox="0 0 200 40">
+      <path
+        d="M10 25 Q 50 5 90 25 T 170 25"
+        stroke="#b00000"
+        stroke-width="3"
+        fill="none"
+        stroke-linecap="round"
+      />
+    </svg>
+  </div>
 </body>
 </html>`;
+
     res.send(html);
   } catch (err) {
     console.error('Summon error:', err);
