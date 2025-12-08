@@ -316,7 +316,7 @@ initFromStorage();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/public/sw.js')
-      .catch(err => console.error('SW registration failed', err));
+  .register('/sw.js')
+  .catch(err => console.error('SW registration failed', err));
   });
 }
