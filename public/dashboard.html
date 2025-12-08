@@ -23,14 +23,16 @@
 
     <!-- After login -->
     <div id="post-auth-section" class="hidden">
-      <!-- Tabs -->
-      <div class="tabs-row">
-        <button id="nav-queue-btn" class="tab-btn active-tab">Queue</button>
-        <button id="nav-tools-btn" class="tab-btn">QR &amp; Placards</button>
-        <button id="nav-account-btn" class="tab-btn">Account</button>
+      <!-- Compact menu for non-queue stuff -->
+      <button id="menu-btn" class="menu-btn hidden">Menu</button>
+
+      <div id="menu-panel" class="menu-panel hidden">
+        <button class="menu-item" data-target="queue">Queue</button>
+        <button class="menu-item" data-target="tools">QR &amp; Placards</button>
+        <button class="menu-item" data-target="account">Account</button>
       </div>
 
-      <!-- Queue view -->
+      <!-- Queue view (default working view) -->
       <div id="queue-section">
         <ul id="queue-list"></ul>
 
@@ -74,11 +76,6 @@
             Early access beta – subscription not enforced yet.
           </span>
         </div>
-
-        <!-- Placeholder for future Stripe button -->
-        <!-- <button id="subscription-btn" class="action-btn">
-          Start / manage subscription
-        </button> -->
 
         <div class="logout-row">
           <button id="logout-btn" class="danger-btn">Log out</button>
