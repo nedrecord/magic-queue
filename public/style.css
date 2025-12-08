@@ -1,251 +1,225 @@
-/* public/style.css */
-
-/* Reset-ish */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* ============================
+   GLOBAL BASE STYLING
+   ============================ */
 
 body {
   margin: 0;
-  padding: 16px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 0;
   background: #000000;
   color: #ffffff;
-  display: flex;
-  justify-content: center;
-  min-height: 100vh;
-}
-
-/* Main wrapper */
-.container {
-  width: 100%;
-  max-width: 480px;
-  padding: 18px 16px 24px;
-}
-
-/* Headings */
-h1 {
-  margin: 0 0 12px 0;
-  font-size: 1.6rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-align: center;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
 }
 
-h2 {
-  margin: 12px 0 8px;
-  font-size: 1rem;
-  font-weight: 500;
+h1, h2, h3, p {
+  margin: 0.5rem 0;
 }
 
-/* Auth / post-auth sections */
-#auth-section,
-#post-auth-section {
-  margin-top: 8px;
+.hidden {
+  display: none;
 }
 
-/* Tabs row */
-.tabs-row {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
-  margin-bottom: 8px;
+.container {
+  padding: 20px;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
-/* Inputs */
+/* ============================
+   INPUTS
+   ============================ */
+
 input[type="email"],
 input[type="password"],
 input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  margin-top: 6px;
-  margin-bottom: 10px;
-  border-radius: 8px;
-  border: 1px solid #444444;
-  background: #222222;
-  color: #ffffff;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-input::placeholder {
-  color: #aaaaaa;
-}
-
-input:focus {
-  border-color: #e53935;
-  box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.6);
-}
-
-/* Buttons: base style */
-button {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
   border: none;
-  border-radius: 999px;
-  padding: 8px 14px;
-  background: #e53935; /* red */
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #1a1a1a;
   color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 500;
+  text-align: center;
+}
+
+/* ============================
+   BUTTONS
+   ============================ */
+
+button {
+  background: #b00000;
+  color: #ffffff;
+  border: none;
+  padding: 12px 18px;
+  font-size: 1rem;
+  margin: 10px 0;
+  border-radius: 6px;
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
+  font-weight: 600;
+  width: 80%;
+}
+
+button:hover:not(:disabled) {
+  background: #d00000;
 }
 
 button:disabled {
   opacity: 0.5;
-  cursor: default;
-  box-shadow: none;
-  transform: none;
+  cursor: not-allowed;
 }
 
-button:hover:not(:disabled) {
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
-  transform: translateY(-1px);
+/* ============================
+   NAV TABS (Queue | QR & Placards)
+   ============================ */
+
+.tab-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
 }
 
-button:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+.tab-buttons button {
+  width: auto;
+  padding: 10px 20px;
 }
 
-/* Tabs & secondary controls default dark */
-.tabs-row button,
-.pause-block button,
-.queue-buttons button,
-.logout-row button {
-  background: #222222;
-  border: 1px solid #444444;
-  box-shadow: none;
+.active-tab {
+  background: #ffffff;
+  color: #000000;
 }
 
-/* Active tab = red */
-.tabs-row button.active-tab {
-  background: #e53935;
-  border-color: #e53935;
-}
+/* ============================
+   QUEUE LIST
+   ============================ */
 
-/* Auth message */
-#auth-message {
-  font-size: 0.8rem;
-  min-height: 1em;
-  margin-top: 4px;
-  color: #ffb74d;
-}
-
-/* Queue section */
-#queue-section {
-  margin-top: 8px;
-  text-align: center;
-}
-
-/* Queue list */
-#queue-list {
+.queue-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 12px 0;
+  margin: 20px 0;
 }
 
 .queue-item {
+  background: #1a1a1a;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 6px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 8px 10px;
-  margin-bottom: 8px;
-  border-radius: 10px;
-  background: #101010;
-  border: 1px solid #333333;
-}
-
-.queue-item span {
-  font-size: 0.95rem;
-}
-
-/* Pause block */
-.pause-block {
-  margin-top: 4px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
 }
 
-/* Pause status text */
+.queue-item button {
+  width: auto;
+  padding: 8px 14px;
+  margin: 0;
+}
+
+/* Pause + Refresh + Auto-refresh text */
 #pause-status {
-  color: #dddddd;
+  margin: 8px 0;
   font-size: 0.85rem;
+  opacity: 0.9;
 }
 
-/* Queue buttons (refresh) */
-.queue-buttons {
+#logout-btn {
+  margin-top: 30px;
+}
+
+/* ============================
+   ADMIN PAGE
+   ============================ */
+
+.admin-container {
+  padding: 20px;
+}
+
+.admin-container input {
+  background: #1a1a1a;
+}
+
+/* ============================
+   PLACARD GENERATOR PAGE
+   ============================ */
+
+body.placard-page {
+  background: #000000;
+}
+
+.placard-controls {
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.placard-controls label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.placard-controls input[type="text"] {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #cccccc;
+}
+
+.placard-controls button {
+  margin-top: 10px;
+}
+
+.placard-status {
+  font-size: 0.85rem;
   margin-top: 8px;
+}
+
+/* Grid of placard cards */
+.placard-grid {
+  margin-top: 16px;
   display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
   justify-content: center;
 }
 
-/* Auto-refresh text under buttons */
-.auto-refresh-note {
-  font-size: 0.8rem;
-  color: #cccccc;
-  margin: 10px 0 0 0;
+/* Single 4x6-ish card */
+.placard-card {
+  background: #ffffff;
+  color: #000000;
+  width: 200px;       /* 4x6-ish aspect */
+  height: 300px;      /* portrait orientation */
+  border: 2px solid #000000;
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   text-align: center;
 }
 
-/* Tools section */
-#tools-section {
-  margin-top: 16px;
-}
-
-.tools-text {
-  margin-top: 6px;
+/* Header text at top of placard */
+.placard-header-text {
   font-size: 0.9rem;
-  line-height: 1.4;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
-.tools-link {
-  margin-top: 16px;
-  font-size: 0.9rem;
-}
-
-/* Logout row at bottom */
-.logout-row {
-  margin-top: 24px;
+/* QR Block */
+.placard-qr-wrapper {
+  flex: 1;
   display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-/* Links */
-a {
-  color: #ff5252;
-  text-decoration: none;
+.placard-qr-wrapper canvas {
+  max-width: 90%;
+  max-height: 90%;
 }
 
-a:hover {
-  text-decoration: underline;
-}
-
-/* Utility */
-.hidden {
-  display: none !important;
-}
-
-/* Small screens */
-@media (max-width: 480px) {
-  .container {
-    padding: 16px 12px 20px;
-  }
-
-  h1 {
-    font-size: 1.4rem;
-  }
-
-  .queue-item {
-    font-size: 0.9rem;
-  }
+/* Table number at bottom */
+.placard-table-label {
+  font-size: 0.85rem;
+  margin-top: 10px;
+  font-weight: 600;
 }
