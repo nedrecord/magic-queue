@@ -209,7 +209,7 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
 
     archive.pipe(res);
 
-    for (let table = 1; table <= 40; table++) {
+    for (let table = 1; table <= 50; table++) {
       const url = `${baseUrl}/summon?m=${magicianId}&t=${table}`;
       const pngBuffer = await QRCode.toBuffer(url, {
         type: 'png',
