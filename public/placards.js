@@ -1,49 +1,16 @@
 // public/placards.js
 
 (function () {
-  const TOKEN_KEY = 'magicQueueToken';
-
-  let authToken = null;
-  let magicianId = null;
-
+  const zipInput = document.getElementById('zip-input');
   const headerInput = document.getElementById('placard-header');
   const generateBtn = document.getElementById('generate-placards-btn');
   const statusEl = document.getElementById('placard-status');
   const gridEl = document.getElementById('placard-grid');
 
-  async function init() {
-    const stored = localStorage.getItem(TOKEN_KEY);
-    if (!stored) {
-      statusEl.textContent = 'You must log in on the dashboard first.';
-      if (generateBtn) generateBtn.disabled = true;
-      return;
-    }
-
-    authToken = stored;
-
-    try {
-      const res = await fetch('/api/me', {
-        headers: { Authorization: 'Bearer ' + authToken }
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        statusEl.textContent = data.error || 'Failed to load magician info.';
-        if (generateBtn) generateBtn.disabled = true;
-        return;
-      }
-
-      magicianId = data.id;
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = 'Network error while loading magician info.';
-      if (generateBtn) generateBtn.disabled = true;
-    }
-  }
-
   async function handleGenerate() {
-    if (!magicianId) {
-      statusEl.textContent =
-        'Magician info not loaded. Refresh this page after logging in.';
+    const file = zipInput.files && zipInput.files[0];
+    if (!file) {
+      statusEl.textContent = 'Select the QR ZIP file first.';
       return;
     }
 
@@ -51,12 +18,34 @@
       (headerInput.value && headerInput.value.trim()) ||
       'Scan to have a magician visit your table.';
 
+    statusEl.textContent = 'Reading ZIP...';
     gridEl.innerHTML = '';
-    statusEl.textContent = 'Generating cards...';
     generateBtn.disabled = true;
 
     try {
+      const arrayBuffer = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(arrayBuffer);
+
+      // We expect files named table-01.png, table-02.png, ... table-50.png
+      const cards = [];
+
       for (let table = 1; table <= 50; table++) {
+        const filename = `table-${String(table).padStart(2, '0')}.png`;
+        const entry = zip.file(filename);
+
+        if (!entry) {
+          console.warn('Missing file in ZIP:', filename);
+          // We’ll create a blank card with no QR but keep the slot
+        }
+
+        cards.push({ table, entry });
+      }
+
+      statusEl.textContent = 'Generating cards...';
+
+      for (const cardInfo of cards) {
+        const { table, entry } = cardInfo;
+
         const card = document.createElement('div');
         card.className = 'placard-card';
 
@@ -65,18 +54,28 @@
         header.className = 'placard-header-text';
         header.textContent = headerText;
 
-        // QR from server
+        // Middle: QR image (if present)
         const qrWrapper = document.createElement('div');
         qrWrapper.className = 'placard-qr-wrapper';
 
-        const img = document.createElement('img');
-        img.className = 'placard-qr-img';
-        img.alt = 'QR for table ' + table;
-        img.src = `/api/qrs/table/${table}`;
+        if (entry) {
+          const blob = await entry.async('blob');
+          const url = URL.createObjectURL(blob);
 
-        qrWrapper.appendChild(img);
+          const img = document.createElement('img');
+          img.className = 'placard-qr-img';
+          img.alt = `QR for table ${table}`;
+          img.src = url;
 
-        // Table label at bottom
+          qrWrapper.appendChild(img);
+        } else {
+          const missing = document.createElement('div');
+          missing.textContent = 'QR missing';
+          missing.style.fontSize = '0.8rem';
+          qrWrapper.appendChild(missing);
+        }
+
+        // Bottom: table number
         const tableLabel = document.createElement('div');
         tableLabel.className = 'placard-table-label';
         tableLabel.textContent = 'Table ' + table;
@@ -89,20 +88,16 @@
       }
 
       statusEl.textContent =
-        'Placards generated. Print this page to create 4"x6" cards.';
+        'Placards generated. Print this page (or save as PDF) on 4"x6" card stock.';
     } catch (err) {
       console.error(err);
-      statusEl.textContent = 'Error generating placards.';
+      statusEl.textContent = 'Error reading ZIP or generating cards.';
     } finally {
       generateBtn.disabled = false;
     }
   }
 
   if (generateBtn) {
-    generateBtn.addEventListener('click', () => {
-      handleGenerate();
-    });
+    generateBtn.addEventListener('click', handleGenerate);
   }
-
-  init();
 })();
