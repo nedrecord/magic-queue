@@ -26,48 +26,38 @@
       <!-- Tabs -->
       <div class="tabs-row">
         <button id="nav-queue-btn" class="active-tab">Queue</button>
-        <button id="nav-tools-btn">QR & placards</button>
+        <button id="nav-tools-btn">QR &amp; Placards</button>
       </div>
-
-      <!-- Auto-refresh note -->
-      <p class="auto-refresh-note">
-        Queue auto-refreshes every 30 seconds.
-      </p>
 
       <!-- Queue view -->
       <div id="queue-section">
-      
-        <div class="queue-card">
-          <div class="queue-controls">
-            <button id="refresh-btn">Refresh now</button>
-          </div>
-      
-          <div class="pause-row">
-            <button id="pause-btn">Pause queue</button>
-            <span id="pause-status">Queue is live.</span>
-          </div>
-      
-          <ul id="queue-list" style="margin-top:12px;"></ul>
-      
-          <!-- Auto-refresh line (now at the bottom) -->
-          <p class="auto-refresh-note bottom-note">
-            Queue auto-refreshes every 30 seconds.
-          </p>
+        <ul id="queue-list"></ul>
+
+        <div class="pause-block">
+          <button id="pause-btn">Pause queue</button>
+          <span id="pause-status">Queue is live.</span>
         </div>
-      
+
+        <div class="queue-buttons">
+          <button id="refresh-btn">Refresh now</button>
+        </div>
+
+        <p class="auto-refresh-note">
+          Queue auto-refreshes every 30 seconds.
+        </p>
       </div>
-      
+
       <!-- Tools view -->
       <div id="tools-section" class="hidden">
-        <h2>QR & placard tools</h2>
-        <p style="font-size:0.9rem; line-height:1.4;">
+        <h2>QR &amp; placard tools</h2>
+        <p class="tools-text">
           Use these tools to set up your table signage. You only need to do this when you start at a new venue or
           if you change your tipping details.
         </p>
 
         <button id="download-qrs-btn-tools">Download summon QR ZIP</button>
 
-        <p style="margin-top:16px; font-size:0.9rem;">
+        <p class="tools-link">
           Need printable table cards?
           <a href="/public/placards.html">Open placard generator</a>.
         </p>
