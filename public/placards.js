@@ -6,7 +6,8 @@ document.getElementById("generate-placards-btn").addEventListener("click", async
   const headerInput = document.getElementById("header-text");
   const status = document.getElementById("placard-status");
 
-  const headerText = (headerInput.value || "").trim() ||
+  const headerText =
+    (headerInput.value || "").trim() ||
     "Scan to have a magician visit your table";
 
   if (!zipFile) {
@@ -95,15 +96,15 @@ async function generatePlacard(qrBlob, tableNum, headerText) {
       ctx.fillStyle = "#000000";
       ctx.textAlign = "center";
 
-      const headerFontSize = 88;       // bigger
+      const headerFontSize = 88;
       ctx.font = `bold ${headerFontSize}px Helvetica`;
 
-      const maxHeaderWidth = 800;      // narrower -> forces wrap, even for default
+      const maxHeaderWidth = 800;
       const headerLines = wrapText(ctx, headerText, maxHeaderWidth);
       const lineHeight = headerFontSize * 1.2;
 
-      // Center the block of header lines roughly near top third
-      const targetCenterY = 220;
+      // More top margin: move header block down a bit
+      const targetCenterY = 260; // was 220
       const totalHeight = (headerLines.length - 1) * lineHeight;
       const firstLineY = targetCenterY - totalHeight / 2;
 
@@ -112,15 +113,15 @@ async function generatePlacard(qrBlob, tableNum, headerText) {
         ctx.fillText(line, canvas.width / 2, y);
       });
 
-      // ---- QR CODE (centered) ----
+      // ---- QR CODE (centered, moved down) ----
       const qrSize = 520;
       const qrX = (canvas.width - qrSize) / 2;
-      const qrY = 430;
+      const qrY = 520; // was 430 – more space under header, less huge gap above table text
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-      // ---- TABLE LABEL (small, bottom center) ----
-      ctx.font = "bold 50px Helvetica";
-      const tableY = 1700;
+      // ---- TABLE LABEL (smaller, moved up) ----
+      ctx.font = "bold 40px Helvetica"; // was 50px
+      const tableY = 1600;              // was 1700
       ctx.fillText(`Table ${tableNum}`, canvas.width / 2, tableY);
 
       canvas.toBlob((blob) => resolve(blob), "image/png");
