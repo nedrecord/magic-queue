@@ -8,6 +8,7 @@ let authToken = null;
 let autoRefreshInterval = null;
 let isPaused = false;
 
+// Auth elements
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const loginBtn = document.getElementById('login-btn');
@@ -16,54 +17,58 @@ const authMessage = document.getElementById('auth-message');
 const authSection = document.getElementById('auth-section');
 const postAuthSection = document.getElementById('post-auth-section');
 
+// Tabs
 const navQueueBtn = document.getElementById('nav-queue-btn');
 const navToolsBtn = document.getElementById('nav-tools-btn');
+const navAccountBtn = document.getElementById('nav-account-btn');
 
+// Sections
 const queueSection = document.getElementById('queue-section');
 const toolsSection = document.getElementById('tools-section');
+const accountSection = document.getElementById('account-section');
 
+// Queue elements
 const queueList = document.getElementById('queue-list');
-const refreshBtn = document.getElementById('refresh-btn');
-
-const downloadQrsBtnTools = document.getElementById('download-qrs-btn-tools');
-
 const pauseBtn = document.getElementById('pause-btn');
 const pauseStatus = document.getElementById('pause-status');
 
+// Tools elements
+const downloadQrsBtnTools = document.getElementById('download-qrs-btn-tools');
+
+// Account elements
+const accountEmail = document.getElementById('account-email');
+const accountSubscription = document.getElementById('account-subscription');
 const logoutBtn = document.getElementById('logout-btn');
 
-
-// ---------- TAB HELPERS ----------
+// ---------- Tab helpers ----------
 
 function setActiveTab(name) {
-  if (!navQueueBtn || !navToolsBtn) return;
-  if (name === 'queue') {
-    navQueueBtn.classList.add('active-tab');
-    navToolsBtn.classList.remove('active-tab');
-  } else if (name === 'tools') {
-    navToolsBtn.classList.add('active-tab');
-    navQueueBtn.classList.remove('active-tab');
-  }
+  const allTabs = [navQueueBtn, navToolsBtn, navAccountBtn];
+  allTabs.forEach((btn) => btn && btn.classList.remove('active-tab'));
+
+  if (name === 'queue' && navQueueBtn) navQueueBtn.classList.add('active-tab');
+  if (name === 'tools' && navToolsBtn) navToolsBtn.classList.add('active-tab');
+  if (name === 'account' && navAccountBtn) navAccountBtn.classList.add('active-tab');
+
+  // Show/hide sections
+  if (queueSection) queueSection.classList.add('hidden');
+  if (toolsSection) toolsSection.classList.add('hidden');
+  if (accountSection) accountSection.classList.add('hidden');
+
+  if (name === 'queue' && queueSection) queueSection.classList.remove('hidden');
+  if (name === 'tools' && toolsSection) toolsSection.classList.remove('hidden');
+  if (name === 'account' && accountSection) accountSection.classList.remove('hidden');
 }
 
-function showQueueView() {
-  queueSection.classList.remove('hidden');
-  toolsSection.classList.add('hidden');
-}
-
-function showToolsView() {
-  toolsSection.classList.remove('hidden');
-  queueSection.classList.add('hidden');
-}
-
-
-// ---------- AUTO REFRESH ----------
+// ---------- Auto-refresh ----------
 
 function startAutoRefresh() {
   if (autoRefreshInterval) return;
   autoRefreshInterval = setInterval(() => {
-    if (authToken) loadQueue();
-  }, 30000); // 30 sec
+    if (authToken) {
+      loadQueue();
+    }
+  }, 30000); // 30 seconds
 }
 
 function stopAutoRefresh() {
@@ -73,23 +78,21 @@ function stopAutoRefresh() {
   }
 }
 
-
-// ---------- QUEUE PAUSE UI ----------
+// ---------- Pause UI ----------
 
 function updatePauseUI() {
   if (!pauseBtn || !pauseStatus) return;
   if (isPaused) {
     pauseBtn.textContent = 'Resume queue';
     pauseStatus.textContent =
-      'Queue is paused. Guests see a break message when they scan.';
+      'Queue is paused. Guests see a brief pause message when they scan.';
   } else {
     pauseBtn.textContent = 'Pause queue';
     pauseStatus.textContent = 'Queue is live.';
   }
 }
 
-
-// ---------- SESSION RESTORE ----------
+// ---------- Session init ----------
 
 async function initFromStorage() {
   const stored = localStorage.getItem(TOKEN_KEY);
@@ -98,20 +101,19 @@ async function initFromStorage() {
   authToken = stored;
   authSection.classList.add('hidden');
   postAuthSection.classList.remove('hidden');
-  showQueueView();
+
   setActiveTab('queue');
   startAutoRefresh();
 
   try {
-    await loadQueue();
+    await Promise.all([loadQueue(), loadAccountInfo()]);
   } catch (err) {
     console.error('Failed to restore session, clearing token', err);
     performLogout(true);
   }
 }
 
-
-// ---------- LOGIN ----------
+// ---------- Login ----------
 
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
@@ -145,10 +147,10 @@ loginBtn.addEventListener('click', async () => {
     authSection.classList.add('hidden');
     postAuthSection.classList.remove('hidden');
 
-    showQueueView();
     setActiveTab('queue');
-    await loadQueue();
     startAutoRefresh();
+
+    await Promise.all([loadQueue(), loadAccountInfo()]);
   } catch (err) {
     console.error(err);
     authMessage.textContent = 'Network error.';
@@ -157,28 +159,21 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
-
-// ---------- REFRESH BUTTON ----------
-
-refreshBtn.addEventListener('click', async () => {
-  await loadQueue();
-});
-
-
-// ---------- NAV BUTTONS ----------
+// ---------- Nav events ----------
 
 navQueueBtn.addEventListener('click', () => {
   setActiveTab('queue');
-  showQueueView();
 });
 
 navToolsBtn.addEventListener('click', () => {
   setActiveTab('tools');
-  showToolsView();
 });
 
+navAccountBtn.addEventListener('click', () => {
+  setActiveTab('account');
+});
 
-// ---------- PAUSE / RESUME ----------
+// ---------- Pause queue ----------
 
 pauseBtn.addEventListener('click', async () => {
   if (!authToken) return;
@@ -209,52 +204,13 @@ pauseBtn.addEventListener('click', async () => {
   }
 });
 
-
-// ---------- DOWNLOAD QR ZIP (THIS IS THE FIXED PART) ----------
+// ---------- Download QR ZIP ----------
 
 downloadQrsBtnTools.addEventListener('click', async () => {
-  if (!authToken) {
-    alert('Log in first.');
-    return;
-  }
-
-  downloadQrsBtnTools.disabled = true;
-  const originalText = downloadQrsBtnTools.textContent;
-  downloadQrsBtnTools.textContent = 'Preparing...';
-
-  try {
-    const res = await fetch('/api/qrs/raw', {
-      headers: { Authorization: `Bearer ${authToken}` }
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      alert('Failed to download QR codes: ' + text);
-      return;
-    }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'magic-queue-qrs.zip';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error(err);
-    alert('Network error while downloading QR codes.');
-  } finally {
-    downloadQrsBtnTools.disabled = false;
-    downloadQrsBtnTools.textContent = originalText;
-  }
+  await downloadQrs();
 });
 
-
-// ---------- LOGOUT ----------
+// ---------- Logout ----------
 
 function performLogout(silent = false) {
   authToken = null;
@@ -275,30 +231,34 @@ logoutBtn.addEventListener('click', () => {
   performLogout(false);
 });
 
-
-// ---------- QUEUE LOADING ----------
+// ---------- Load queue ----------
 
 async function loadQueue() {
   if (!authToken) return;
 
-  queueList.innerHTML = '<li>Loading...</li>';
+  if (queueList) {
+    queueList.innerHTML = '<li>Loading...</li>';
+  }
 
   try {
     const res = await fetch('/api/queue', {
       headers: { Authorization: `Bearer ${authToken}` }
     });
-
     const data = await res.json();
 
     if (!res.ok) {
-      queueList.innerHTML = `<li>Error: ${data.error || 'Failed to load'}</li>`;
+      if (queueList) {
+        queueList.innerHTML = `<li>Error: ${data.error || 'Failed to load'}</li>`;
+      }
       return;
     }
 
     isPaused = !!data.paused;
     updatePauseUI();
 
+    if (!queueList) return;
     queueList.innerHTML = '';
+
     if (!data.summons || data.summons.length === 0) {
       queueList.innerHTML = '<li>No active summons.</li>';
       return;
@@ -322,12 +282,13 @@ async function loadQueue() {
     });
   } catch (err) {
     console.error(err);
-    queueList.innerHTML = '<li>Network error.</li>';
+    if (queueList) {
+      queueList.innerHTML = '<li>Network error.</li>';
+    }
   }
 }
 
-
-// ---------- CLEAR TABLE ----------
+// ---------- Clear table ----------
 
 async function clearTable(tableNumber) {
   if (!authToken) return;
@@ -341,13 +302,11 @@ async function clearTable(tableNumber) {
       },
       body: JSON.stringify({ table_number: tableNumber })
     });
-
     const data = await res.json();
     if (!res.ok) {
       alert(data.error || 'Failed to clear table');
       return;
     }
-
     await loadQueue();
   } catch (err) {
     console.error(err);
@@ -355,14 +314,85 @@ async function clearTable(tableNumber) {
   }
 }
 
+// ---------- Download raw QR ZIP ----------
 
-// ---------- INIT ----------
+async function downloadQrs() {
+  if (!authToken) {
+    alert('Log in first.');
+    return;
+  }
+
+  downloadQrsBtnTools.disabled = true;
+  const originalText = downloadQrsBtnTools.textContent;
+  downloadQrsBtnTools.textContent = 'Preparing...';
+
+  try {
+    const res = await fetch('/api/qrs/raw', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert('Failed to download QR codes: ' + text);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'magic-queue-qrs.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('Network error while downloading QR codes.');
+  } finally {
+    downloadQrsBtnTools.disabled = false;
+    downloadQrsBtnTools.textContent = originalText;
+  }
+}
+
+// ---------- Account info ----------
+
+async function loadAccountInfo() {
+  if (!authToken) return;
+  try {
+    const res = await fetch('/api/me', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      console.error('Failed to load account info', data);
+      return;
+    }
+
+    if (accountEmail) {
+      accountEmail.textContent = data.email || '(unknown)';
+    }
+
+    // Subscription text is static for now; real logic will change this later.
+    if (accountSubscription) {
+      accountSubscription.textContent =
+        'Early access beta – subscription billing not active yet.';
+    }
+  } catch (err) {
+    console.error('Account info error', err);
+  }
+}
+
+// ---------- Boot ----------
 
 initFromStorage();
 
-
-// ---------- SERVICE WORKER ----------
-
+// Register a very simple service worker for PWA install
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
