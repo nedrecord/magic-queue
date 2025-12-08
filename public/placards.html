@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
   <style>
-    /* Page-specific tweaks so we don't mess the dashboard */
     .placard-page {
       max-width: 480px;
       margin: 0 auto;
@@ -23,8 +22,8 @@
       margin-bottom: 12px;
       font-size: 0.95rem;
     }
-    .placard-form input,
-    .placard-form select {
+    .placard-form input[type="text"],
+    .placard-form input[type="file"] {
       width: 100%;
       margin-top: 4px;
       padding: 8px 10px;
@@ -44,7 +43,7 @@
       text-align: center;
       min-height: 1.2em;
     }
-    .placard-preview-note {
+    .placard-note {
       margin-top: 18px;
       font-size: 0.85rem;
       text-align: center;
@@ -58,6 +57,11 @@
 
     <div class="placard-form">
       <label>
+        QR ZIP from Summon
+        <input id="placard-zip-file" type="file" accept=".zip">
+      </label>
+
+      <label>
         Header text
         <input
           id="placard-header"
@@ -67,18 +71,13 @@
         >
       </label>
 
-      <label>
-        Table number
-        <select id="placard-table"></select>
-      </label>
-
-      <button id="placard-generate-btn" class="primary-btn">
-        Download placard PNG
+      <button id="placard-generate-batch-btn" class="primary-btn">
+        Generate placard ZIP
       </button>
 
       <p id="placard-status"></p>
-      <p class="placard-preview-note">
-        Each download is a 4×6 style image with white background and black print.
+      <p class="placard-note">
+        Upload the QR ZIP from the dashboard. You’ll get a new ZIP with 4×6 placards (one PNG per table).
       </p>
     </div>
 
@@ -90,6 +89,12 @@
       style="display:none;"
     ></canvas>
   </div>
+
+  <!-- JSZip from CDN (client-side only, no server change needed) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
+          integrity="sha512-4JnOVJ69ikVVNr5+1zU63u+3kOynf43g0HsC4VxBm/I3fHut4P7h6v0Dd3Xk6U1sl6ejpa7X+JErFqvOppN3sA=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
 
   <script src="/public/placards.js"></script>
 </body>
