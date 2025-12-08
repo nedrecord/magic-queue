@@ -120,9 +120,14 @@ app.get('/api/me', authRequired, async (req, res) => {
 
   try {
     const row = await db.get(
-      'SELECT id, email FROM magicians WHERE id = $1',
-      [id]
-    );
+  `SELECT id, email,
+          subscription_status,
+          subscription_price_id,
+          subscription_renewal_at
+   FROM magicians
+   WHERE id = $1`,
+  [id]
+);
 
     if (!row) {
       return res.status(404).json({ error: 'Magician not found' });
