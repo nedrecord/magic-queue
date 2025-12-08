@@ -382,22 +382,28 @@ async function loadAccountInfo() {
     }
 
     if (accountSubscription) {
-  const status = data.subscription_status || 'unsubscribed';
-  const price = data.subscription_price_id;
+      const status = data.subscription_status || 'unsubscribed';
+      const price = data.subscription_price_id;
 
-  let label = 'Not subscribed';
+      let label = 'Not subscribed';
 
-  if (status === 'active') {
-    if (price === 'your_20_dollar_price_id_here') {
-      label = 'Active – Early Adopter ($20/year)';
-    } else if (price === 'your_25_dollar_price_id_here') {
-      label = 'Active – Standard ($25/year)';
-    } else if (price === 'your_free_price_id_here') {
-      label = 'Active – Free Tier';
+      if (status === 'active') {
+        if (price === 'your_20_dollar_price_id_here') {
+          label = 'Active – Early Adopter ($20/year)';
+        } else if (price === 'your_25_dollar_price_id_here') {
+          label = 'Active – Standard ($25/year)';
+        } else if (price === 'your_free_price_id_here') {
+          label = 'Active – Free Tier';
+        } else {
+          label = 'Active – Subscription';
+        }
+      }
+
+      accountSubscription.textContent = label;
     }
+  } catch (err) {
+    console.error('Failed to load account info', err);
   }
-
-  accountSubscription.textContent = label;
 }
 
 // ---------- Boot ----------
