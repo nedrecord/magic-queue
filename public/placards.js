@@ -27,10 +27,10 @@ async function drawPlacardForTable(headerText, tableNumber, qrImage) {
   // Header at top
   drawCenteredText(headerText, 200, 60, '600');
 
-  // QR centered in middle
-  const qrSize = 900;
+  // Smaller QR centered in middle
+  const qrSize = 650; // was 900
   const qrX = (canvas.width - qrSize) / 2;
-  const qrY = 450;
+  const qrY = 520;    // pushed slightly down
   ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
 
   // Table number near bottom
