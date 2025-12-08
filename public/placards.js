@@ -21,7 +21,6 @@
 
     authToken = stored;
 
-    // Ask backend who we are so we get the right magician ID
     try {
       const res = await fetch('/api/me', {
         headers: { Authorization: 'Bearer ' + authToken }
@@ -43,7 +42,8 @@
 
   async function handleGenerate() {
     if (!magicianId) {
-      statusEl.textContent = 'Magician info not loaded. Refresh this page after logging in.';
+      statusEl.textContent =
+        'Magician info not loaded. Refresh this page after logging in.';
       return;
     }
 
@@ -55,26 +55,28 @@
     statusEl.textContent = 'Generating cards...';
     generateBtn.disabled = true;
 
-    const origin = window.location.origin;
-
     try {
       for (let table = 1; table <= 50; table++) {
         const card = document.createElement('div');
         card.className = 'placard-card';
 
-        // Top: header text
+        // Header text at top
         const header = document.createElement('div');
         header.className = 'placard-header-text';
         header.textContent = headerText;
 
-        // Middle: QR
+        // QR from server
         const qrWrapper = document.createElement('div');
         qrWrapper.className = 'placard-qr-wrapper';
 
-        const canvas = document.createElement('canvas');
-        qrWrapper.appendChild(canvas);
+        const img = document.createElement('img');
+        img.className = 'placard-qr-img';
+        img.alt = 'QR for table ' + table;
+        img.src = `/api/qrs/table/${table}`;
 
-        // Bottom: table label
+        qrWrapper.appendChild(img);
+
+        // Table label at bottom
         const tableLabel = document.createElement('div');
         tableLabel.className = 'placard-table-label';
         tableLabel.textContent = 'Table ' + table;
@@ -84,32 +86,13 @@
         card.appendChild(tableLabel);
 
         gridEl.appendChild(card);
-
-        const url = `${origin}/summon?m=${magicianId}&t=${table}`;
-
-        // Render QR into the canvas
-        await new Promise((resolve, reject) => {
-          QRCode.toCanvas(
-            canvas,
-            url,
-            { width: 180, margin: 1 },
-            (err) => {
-              if (err) {
-                console.error('QR error for table', table, err);
-                reject(err);
-              } else {
-                resolve();
-              }
-            }
-          );
-        });
       }
 
       statusEl.textContent =
         'Placards generated. Print this page to create 4"x6" cards.';
     } catch (err) {
       console.error(err);
-      statusEl.textContent = 'Error generating one or more QR codes.';
+      statusEl.textContent = 'Error generating placards.';
     } finally {
       generateBtn.disabled = false;
     }
