@@ -19,6 +19,18 @@ const postAuthSection = document.getElementById('post-auth-section');
 const navQueueBtn = document.getElementById('nav-queue-btn');
 const navToolsBtn = document.getElementById('nav-tools-btn');
 
+// Active tab helper
+function setActiveTab(name) {
+  if (!navQueueBtn || !navToolsBtn) return;
+  if (name === 'queue') {
+    navQueueBtn.classList.add('active-tab');
+    navToolsBtn.classList.remove('active-tab');
+  } else if (name === 'tools') {
+    navToolsBtn.classList.add('active-tab');
+    navQueueBtn.classList.remove('active-tab');
+  }
+}
+
 const queueSection = document.getElementById('queue-section');
 const toolsSection = document.getElementById('tools-section');
 
@@ -78,6 +90,7 @@ async function initFromStorage() {
   authSection.classList.add('hidden');
   postAuthSection.classList.remove('hidden');
   showQueueView();
+  setActiveTab('queue');
   startAutoRefresh();
 
   try {
@@ -121,6 +134,7 @@ loginBtn.addEventListener('click', async () => {
     postAuthSection.classList.remove('hidden');
 
     showQueueView();
+    setActiveTab('queue');
     await loadQueue();
     startAutoRefresh();
   } catch (err) {
@@ -135,11 +149,14 @@ refreshBtn.addEventListener('click', async () => {
   await loadQueue();
 });
 
+// Nav buttons: wire in active tab state
 navQueueBtn.addEventListener('click', () => {
+  setActiveTab('queue');
   showQueueView();
 });
 
 navToolsBtn.addEventListener('click', () => {
+  setActiveTab('tools');
   showToolsView();
 });
 
@@ -316,7 +333,7 @@ initFromStorage();
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-  .register('/sw.js')
-  .catch(err => console.error('SW registration failed', err));
+      .register('/sw.js')
+      .catch(err => console.error('SW registration failed', err));
   });
 }
