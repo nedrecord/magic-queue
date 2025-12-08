@@ -351,3 +351,144 @@ body.placard-page {
   margin: 0 auto;
   padding: 24px 16px 40px;
 }
+
+/* Container width still constrained for desktop */
+.container {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+
+/* Menu button + panel */
+
+.menu-btn {
+  display: inline-block;
+  margin: 0 auto 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: #333333;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.menu-panel {
+  background: #111111;
+  border-radius: 12px;
+  padding: 8px;
+  margin-bottom: 20px;
+}
+
+.menu-item {
+  width: 100%;
+  border: none;
+  background: #222222;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  text-align: left;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.menu-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Queue list + controls (unchanged from previous version) */
+
+#queue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  color: #ffffff;
+  text-align: left;
+}
+
+.queue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  background: #222222;
+  border-radius: 10px;
+}
+
+.queue-item button {
+  background: #a00000;
+  border: none;
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.queue-controls {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.action-btn {
+  display: inline-block;
+  width: 100%;
+  max-width: 420px;
+  padding: 14px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #a00000;
+  color: #ffffff;
+  margin: 0 auto;
+}
+
+.pause-status {
+  margin-top: 8px;
+  color: #ffffff;
+}
+
+/* Account section */
+
+#account-section {
+  text-align: left;
+}
+
+.account-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.account-label {
+  font-weight: 600;
+}
+
+.account-value {
+  opacity: 0.9;
+}
+
+.logout-row {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.danger-btn {
+  display: inline-block;
+  width: 100%;
+  max-width: 420px;
+  padding: 14px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #a00000;
+  color: #ffffff;
+}
