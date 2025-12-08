@@ -53,6 +53,7 @@ h2 {
   justify-content: center;
   gap: 8px;
   margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 /* Inputs */
@@ -114,10 +115,10 @@ button:active:not(:disabled) {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* Tabs & secondary buttons default dark */
+/* Tabs & secondary controls default dark */
 .tabs-row button,
-.queue-controls button,
-.pause-row button,
+.pause-block button,
+.queue-buttons button,
 .logout-row button {
   background: #222222;
   border: 1px solid #444444;
@@ -138,38 +139,17 @@ button:active:not(:disabled) {
   color: #ffb74d;
 }
 
-/* Queue card – grey bubble */
-.queue-card {
-  background: #1a1a1a;
-  border: 1px solid #333333;
-  border-radius: 18px;
-  padding: 16px;
-  margin-top: 16px;
-}
-
-/* Queue controls and pause row */
-.queue-controls {
-  margin-top: 0;
-}
-
-.pause-row {
+/* Queue section */
+#queue-section {
   margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Pause status text */
-#pause-status {
-  color: #dddddd;
-  font-size: 0.85rem;
+  text-align: center;
 }
 
 /* Queue list */
 #queue-list {
   list-style: none;
   padding: 0;
-  margin: 12px 0 0 0;
+  margin: 0 0 12px 0;
 }
 
 .queue-item {
@@ -187,17 +167,50 @@ button:active:not(:disabled) {
   font-size: 0.95rem;
 }
 
-/* Auto-refresh text, at bottom of queue card */
+/* Pause block */
+.pause-block {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Pause status text */
+#pause-status {
+  color: #dddddd;
+  font-size: 0.85rem;
+}
+
+/* Queue buttons (refresh) */
+.queue-buttons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Auto-refresh text under buttons */
 .auto-refresh-note {
   font-size: 0.8rem;
   color: #cccccc;
-  margin: 14px 0 0 0;
-  text-align: left;
+  margin: 10px 0 0 0;
+  text-align: center;
 }
 
 /* Tools section */
-#tools-section p {
+#tools-section {
+  margin-top: 16px;
+}
+
+.tools-text {
   margin-top: 6px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.tools-link {
+  margin-top: 16px;
+  font-size: 0.9rem;
 }
 
 /* Logout row at bottom */
@@ -222,15 +235,6 @@ a:hover {
   display: none !important;
 }
 
-/* Admin page tweak (if you ever use body.admin-page) */
-body.admin-page {
-  padding-top: 24px;
-}
-
-body.admin-page .container {
-  max-width: 520px;
-}
-
 /* Small screens */
 @media (max-width: 480px) {
   .container {
@@ -239,5 +243,9 @@ body.admin-page .container {
 
   h1 {
     font-size: 1.4rem;
+  }
+
+  .queue-item {
+    font-size: 0.9rem;
   }
 }
