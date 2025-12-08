@@ -316,7 +316,7 @@ app.get('/summon', async (req, res) => {
 
     const liveMsg = 'Your Request Has Been Passed to the Magician';
     const pausedMsg =
-      'The Magic is Taking a Brief Pause';
+      'The Magician is Taking a Brief Pause';
 
     const html = `<!DOCTYPE html>
 <html>
