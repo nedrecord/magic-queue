@@ -11,35 +11,17 @@ const db = require('./db');
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || null;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// static files
+// Serve static files from /public under /public/*
 app.use('/public', express.static(path.join(__dirname, 'public')));
-
-// helper: auth middleware
-function authRequired(req, res, next) {
-  const authHeader = req.headers['authorization'] || '';
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
-  }
-
-  const token = parts[1];
-  jwt.verify(token, JWT_SECRET, (err, payload) => {
-    if (err || !payload || !payload.magicianId) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-    req.magicianId = payload.magicianId;
-    next();
-  });
-}
 
 // ----------------- AUTH -----------------
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || null;
-
+// Admin-only register endpoint
 app.post('/api/register', async (req, res) => {
   const { email, password, admin_secret } = req.body || {};
 
@@ -73,8 +55,6 @@ app.post('/api/register', async (req, res) => {
     );
 
     const magicianId = inserted.id;
-    // For admin use we don't actually need to auto-login the magician,
-    // but it's harmless to return a token if we want.
     const token = jwt.sign({ magicianId }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, magicianId });
   } catch (err) {
@@ -83,6 +63,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// Normal login
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
@@ -112,6 +93,25 @@ app.post('/api/login', async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 });
+
+// ----------------- AUTH MIDDLEWARE -----------------
+
+function authRequired(req, res, next) {
+  const authHeader = req.headers['authorization'] || '';
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    return res.status(401).json({ error: 'Missing or invalid Authorization header' });
+  }
+
+  const token = parts[1];
+  jwt.verify(token, JWT_SECRET, (err, payload) => {
+    if (err || !payload || !payload.magicianId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    req.magicianId = payload.magicianId;
+    next();
+  });
+}
 
 // ----------------- QUEUE API -----------------
 
@@ -162,7 +162,7 @@ app.post('/api/queue/clear', authRequired, async (req, res) => {
   }
 });
 
-// pause / resume queue
+// Pause / resume queue
 app.post('/api/pause', authRequired, async (req, res) => {
   const magicianId = req.magicianId;
   const { paused } = req.body || {};
@@ -299,15 +299,22 @@ app.get('/summon', async (req, res) => {
 
 // ----------------- FRONTEND ROUTES -----------------
 
+// Dashboard
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// simple admin page for creating magicians
+// Admin account-creation page
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// Root redirect
 app.get('/', (req, res) => {
   res.redirect('/dashboard');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Magic queue server running on port ${PORT}`);
 });
