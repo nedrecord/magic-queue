@@ -314,29 +314,45 @@ app.get('/summon', async (req, res) => {
     );
 
     const paused = !!magician.paused;
-    const message = paused
-      ? 'The magician is currently on a break, but will get to you when they are done.'
-      : 'The magic will begin soon.';
 
-    const html = `<!DOCTYPE html>
+    const liveMsg = "The magician has received your request.";
+    const pausedMsg = "The magician is taking a brief pause and will visit when they return.";
+
+    const flourish = `
+      <div style="margin-top:20px; opacity:0.6;">
+        <svg width="180" height="40" viewBox="0 0 180 40">
+          <path d="M10 20 Q40 0 70 20 T130 20 T170 20"
+                stroke="white" fill="transparent" stroke-width="2"/>
+        </svg>
+      </div>
+    `;
+
+    const html = `
+<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Magic Queue</title>
+  <title>Summon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: 24px;
+      background: #1b1b1b;
+      color: #e6e6e6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       text-align: center;
+      padding: 40px 20px;
     }
     p {
-      font-size: 1.1rem;
+      font-size: 1.6rem;
+      font-weight: 500;
+      margin-bottom: 10px;
+      line-height: 1.4;
     }
   </style>
 </head>
 <body>
-  <p>${message}</p>
+  <p>${paused ? pausedMsg : liveMsg}</p>
+  ${flourish}
 </body>
 </html>`;
 
