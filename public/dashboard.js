@@ -2,6 +2,8 @@
 
 console.log('dashboard.js loaded');
 
+const TOKEN_KEY = 'magicQueueToken';
+
 let authToken = null;
 let autoRefreshInterval = null;
 let isPaused = false;
@@ -28,6 +30,8 @@ const downloadQrsBtnTools = document.getElementById('download-qrs-btn-tools');
 const pauseBtn = document.getElementById('pause-btn');
 const pauseStatus = document.getElementById('pause-status');
 
+const logoutBtn = document.getElementById('logout-btn');
+
 function showQueueView() {
   queueSection.classList.remove('hidden');
   toolsSection.classList.add('hidden');
@@ -47,6 +51,13 @@ function startAutoRefresh() {
   }, 30000); // 30 seconds
 }
 
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+  }
+}
+
 function updatePauseUI() {
   if (!pauseBtn || !pauseStatus) return;
   if (isPaused) {
@@ -56,6 +67,24 @@ function updatePauseUI() {
   } else {
     pauseBtn.textContent = 'Pause queue';
     pauseStatus.textContent = 'Queue is live.';
+  }
+}
+
+async function initFromStorage() {
+  const stored = localStorage.getItem(TOKEN_KEY);
+  if (!stored) return;
+
+  authToken = stored;
+  authSection.classList.add('hidden');
+  postAuthSection.classList.remove('hidden');
+  showQueueView();
+  startAutoRefresh();
+
+  try {
+    await loadQueue();
+  } catch (err) {
+    console.error('Failed to restore session, clearing token', err);
+    performLogout(true);
   }
 }
 
@@ -85,6 +114,8 @@ loginBtn.addEventListener('click', async () => {
     }
 
     authToken = data.token;
+    localStorage.setItem(TOKEN_KEY, authToken);
+
     authMessage.textContent = 'Logged in.';
     authSection.classList.add('hidden');
     postAuthSection.classList.remove('hidden');
@@ -112,7 +143,6 @@ navToolsBtn.addEventListener('click', () => {
   showToolsView();
 });
 
-// Pause / resume queue
 pauseBtn.addEventListener('click', async () => {
   if (!authToken) return;
   const newPaused = !isPaused;
@@ -145,6 +175,26 @@ pauseBtn.addEventListener('click', async () => {
 // Download QR ZIP from tools page
 downloadQrsBtnTools.addEventListener('click', async () => {
   await downloadQrs();
+});
+
+// Logout
+function performLogout(silent = false) {
+  authToken = null;
+  localStorage.removeItem(TOKEN_KEY);
+  stopAutoRefresh();
+
+  postAuthSection.classList.add('hidden');
+  authSection.classList.remove('hidden');
+
+  if (!silent) {
+    authMessage.textContent = '';
+    emailInput.value = '';
+    passwordInput.value = '';
+  }
+}
+
+logoutBtn.addEventListener('click', () => {
+  performLogout(false);
 });
 
 async function loadQueue() {
@@ -257,4 +307,16 @@ async function downloadQrs() {
     downloadQrsBtnTools.disabled = false;
     downloadQrsBtnTools.textContent = originalText;
   }
+}
+
+// Try auto-restore session on load
+initFromStorage();
+
+// Register a very simple service worker for PWA install
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/public/sw.js')
+      .catch(err => console.error('SW registration failed', err));
+  });
 }
