@@ -346,7 +346,7 @@ async function downloadQrs() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'magic-queue-qrs.zip';
+    a.download = 'Summon-QRs.zip';
     document.body.appendChild(a);
     a.click();
     a.remove();
