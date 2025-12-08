@@ -6,53 +6,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
 </head>
+
 <body class="placard-body">
   <div class="placard-container">
+
     <h1>Placard Generator</h1>
 
     <p class="placard-subtitle">
-      Upload the ZIP of your <code>table-XX.png</code> QR codes and we’ll create
-      one printable placard PNG for each table.
+      Upload your QR code ZIP file and we’ll create one printable placard for each table.
     </p>
 
     <form id="placard-form">
-      <!-- QR ZIP row -->
-      <div class="form-row">
-        <label for="qr-zip" class="form-label">QR ZIP file</label>
-        <input
-          type="file"
-          id="qr-zip"
-          accept=".zip"
-          class="file-input"
-        >
+
+      <div class="form-row center">
+        <label for="qr-zip" class="form-label">QR ZIP File</label>
+        <input type="file" id="qr-zip" accept=".zip" class="file-input">
       </div>
 
-      <!-- Header text row -->
-      <div class="form-row">
-        <label for="header-text" class="form-label">
-          Header text (optional)
-        </label>
+      <div class="form-row center">
+        <label for="header-text" class="form-label">Header text (optional)</label>
         <input
           type="text"
           id="header-text"
           class="text-input"
           placeholder="Scan to have a magician visit your table"
         >
-        <p class="helper-text">
-          Leave this as is, or type your own message to appear at the top of each placard.
+        <p class="helper-text center">
+          Leave this as is, or type your own message for the top of each placard.
         </p>
       </div>
 
       <button type="button" id="generate-placards-btn" class="primary-btn">
-        Generate placard ZIP
+        Generate Placard ZIP
       </button>
 
-      <p id="placard-status" class="status-message"></p>
+      <p id="placard-status" class="status-message center"></p>
     </form>
 
     <a href="/dashboard" class="secondary-btn back-btn">
-      Back to dashboard
+      Back to Dashboard
     </a>
+
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
