@@ -382,12 +382,22 @@ async function loadAccountInfo() {
     }
 
     if (accountSubscription) {
-      accountSubscription.textContent =
-        'Early access beta – subscription billing not active yet.';
+  const status = data.subscription_status || 'unsubscribed';
+  const price = data.subscription_price_id;
+
+  let label = 'Not subscribed';
+
+  if (status === 'active') {
+    if (price === 'your_20_dollar_price_id_here') {
+      label = 'Active – Early Adopter ($20/year)';
+    } else if (price === 'your_25_dollar_price_id_here') {
+      label = 'Active – Standard ($25/year)';
+    } else if (price === 'your_free_price_id_here') {
+      label = 'Active – Free Tier';
     }
-  } catch (err) {
-    console.error('Account info error', err);
   }
+
+  accountSubscription.textContent = label;
 }
 
 // ---------- Boot ----------
