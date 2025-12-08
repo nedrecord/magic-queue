@@ -6,7 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
 
-  <!-- Browser-side QR generator -->
+  <!-- JSZip for reading the QR ZIP client-side -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body class="placard-page">
   <div class="container">
@@ -14,16 +15,21 @@
 
     <h2>Placard generator</h2>
     <p class="tools-text">
-      Generate 4&quot;x6&quot; table cards for up to 50 tables. The header text appears on every card.
+      Step 1: On the dashboard, download your QR codes (.zip).<br>
+      Step 2: Upload that ZIP here to lay out 50 table cards.
     </p>
 
     <div class="placard-controls">
+      <label for="zip-input">Upload QR ZIP (from the dashboard)</label>
+      <input id="zip-input" type="file" accept=".zip">
+
       <label for="placard-header">Header text</label>
       <input
         id="placard-header"
         type="text"
         value="Scan to have a magician visit your table."
       >
+
       <button id="generate-placards-btn">Generate placards</button>
       <p id="placard-status" class="placard-status"></p>
     </div>
