@@ -492,3 +492,7 @@ body.placard-page {
   background: #a00000;
   color: #ffffff;
 }
+
+#download-qrs-btn-tools {
+  margin-bottom: 26px; /* sweet spot */
+}
