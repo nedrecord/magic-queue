@@ -19,18 +19,6 @@ const postAuthSection = document.getElementById('post-auth-section');
 const navQueueBtn = document.getElementById('nav-queue-btn');
 const navToolsBtn = document.getElementById('nav-tools-btn');
 
-// Active tab helper
-function setActiveTab(name) {
-  if (!navQueueBtn || !navToolsBtn) return;
-  if (name === 'queue') {
-    navQueueBtn.classList.add('active-tab');
-    navToolsBtn.classList.remove('active-tab');
-  } else if (name === 'tools') {
-    navToolsBtn.classList.add('active-tab');
-    navQueueBtn.classList.remove('active-tab');
-  }
-}
-
 const queueSection = document.getElementById('queue-section');
 const toolsSection = document.getElementById('tools-section');
 
@@ -44,6 +32,20 @@ const pauseStatus = document.getElementById('pause-status');
 
 const logoutBtn = document.getElementById('logout-btn');
 
+
+// ---------- TAB HELPERS ----------
+
+function setActiveTab(name) {
+  if (!navQueueBtn || !navToolsBtn) return;
+  if (name === 'queue') {
+    navQueueBtn.classList.add('active-tab');
+    navToolsBtn.classList.remove('active-tab');
+  } else if (name === 'tools') {
+    navToolsBtn.classList.add('active-tab');
+    navQueueBtn.classList.remove('active-tab');
+  }
+}
+
 function showQueueView() {
   queueSection.classList.remove('hidden');
   toolsSection.classList.add('hidden');
@@ -54,13 +56,14 @@ function showToolsView() {
   queueSection.classList.add('hidden');
 }
 
+
+// ---------- AUTO REFRESH ----------
+
 function startAutoRefresh() {
   if (autoRefreshInterval) return;
   autoRefreshInterval = setInterval(() => {
-    if (authToken) {
-      loadQueue();
-    }
-  }, 30000); // 30 seconds
+    if (authToken) loadQueue();
+  }, 30000); // 30 sec
 }
 
 function stopAutoRefresh() {
@@ -69,6 +72,9 @@ function stopAutoRefresh() {
     autoRefreshInterval = null;
   }
 }
+
+
+// ---------- QUEUE PAUSE UI ----------
 
 function updatePauseUI() {
   if (!pauseBtn || !pauseStatus) return;
@@ -81,6 +87,9 @@ function updatePauseUI() {
     pauseStatus.textContent = 'Queue is live.';
   }
 }
+
+
+// ---------- SESSION RESTORE ----------
 
 async function initFromStorage() {
   const stored = localStorage.getItem(TOKEN_KEY);
@@ -100,6 +109,9 @@ async function initFromStorage() {
     performLogout(true);
   }
 }
+
+
+// ---------- LOGIN ----------
 
 loginBtn.addEventListener('click', async () => {
   const email = emailInput.value.trim();
@@ -145,11 +157,16 @@ loginBtn.addEventListener('click', async () => {
   }
 });
 
+
+// ---------- REFRESH BUTTON ----------
+
 refreshBtn.addEventListener('click', async () => {
   await loadQueue();
 });
 
-// Nav buttons: wire in active tab state
+
+// ---------- NAV BUTTONS ----------
+
 navQueueBtn.addEventListener('click', () => {
   setActiveTab('queue');
   showQueueView();
@@ -159,6 +176,9 @@ navToolsBtn.addEventListener('click', () => {
   setActiveTab('tools');
   showToolsView();
 });
+
+
+// ---------- PAUSE / RESUME ----------
 
 pauseBtn.addEventListener('click', async () => {
   if (!authToken) return;
@@ -189,12 +209,53 @@ pauseBtn.addEventListener('click', async () => {
   }
 });
 
-// Download QR ZIP from tools page
+
+// ---------- DOWNLOAD QR ZIP (THIS IS THE FIXED PART) ----------
+
 downloadQrsBtnTools.addEventListener('click', async () => {
-  await downloadQrs();
+  if (!authToken) {
+    alert('Log in first.');
+    return;
+  }
+
+  downloadQrsBtnTools.disabled = true;
+  const originalText = downloadQrsBtnTools.textContent;
+  downloadQrsBtnTools.textContent = 'Preparing...';
+
+  try {
+    const res = await fetch('/api/qrs/raw', {
+      headers: { Authorization: `Bearer ${authToken}` }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert('Failed to download QR codes: ' + text);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'magic-queue-qrs.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error(err);
+    alert('Network error while downloading QR codes.');
+  } finally {
+    downloadQrsBtnTools.disabled = false;
+    downloadQrsBtnTools.textContent = originalText;
+  }
 });
 
-// Logout
+
+// ---------- LOGOUT ----------
+
 function performLogout(silent = false) {
   authToken = null;
   localStorage.removeItem(TOKEN_KEY);
@@ -214,6 +275,9 @@ logoutBtn.addEventListener('click', () => {
   performLogout(false);
 });
 
+
+// ---------- QUEUE LOADING ----------
+
 async function loadQueue() {
   if (!authToken) return;
 
@@ -223,6 +287,7 @@ async function loadQueue() {
     const res = await fetch('/api/queue', {
       headers: { Authorization: `Bearer ${authToken}` }
     });
+
     const data = await res.json();
 
     if (!res.ok) {
@@ -261,6 +326,9 @@ async function loadQueue() {
   }
 }
 
+
+// ---------- CLEAR TABLE ----------
+
 async function clearTable(tableNumber) {
   if (!authToken) return;
 
@@ -273,11 +341,13 @@ async function clearTable(tableNumber) {
       },
       body: JSON.stringify({ table_number: tableNumber })
     });
+
     const data = await res.json();
     if (!res.ok) {
       alert(data.error || 'Failed to clear table');
       return;
     }
+
     await loadQueue();
   } catch (err) {
     console.error(err);
@@ -285,51 +355,14 @@ async function clearTable(tableNumber) {
   }
 }
 
-async function downloadQrs() {
-  if (!authToken) {
-    alert('Log in first.');
-    return;
-  }
 
-  downloadQrsBtnTools.disabled = true;
-  const originalText = downloadQrsBtnTools.textContent;
-  downloadQrsBtnTools.textContent = 'Preparing...';
+// ---------- INIT ----------
 
-  try {
-    const res = await fetch('/api/qrs/raw', {
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      alert('Failed to download QR codes: ' + text);
-      return;
-    }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'magic-queue-qrs.zip';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    console.error(err);
-    alert('Network error while downloading QR codes.');
-  } finally {
-    downloadQrsBtnTools.disabled = false;
-    downloadQrsBtnTools.textContent = originalText;
-  }
-}
-
-// Try auto-restore session on load
 initFromStorage();
 
-// Register a very simple service worker for PWA install
+
+// ---------- SERVICE WORKER ----------
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
