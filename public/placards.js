@@ -3,8 +3,11 @@ console.log("placards.js loaded");
 
 document.getElementById("generate-placards-btn").addEventListener("click", async () => {
   const zipFile = document.getElementById("qr-zip").files[0];
-  const headerText = document.getElementById("header-text").value.trim() || "Scan to have a magician visit your table";
+  const headerInput = document.getElementById("header-text");
   const status = document.getElementById("placard-status");
+
+  const headerText = (headerInput.value || "").trim() ||
+    "Scan to have a magician visit your table";
 
   if (!zipFile) {
     status.textContent = "Choose a QR ZIP file first.";
@@ -16,19 +19,18 @@ document.getElementById("generate-placards-btn").addEventListener("click", async
   try {
     const jszip = new JSZip();
     const loadedZip = await jszip.loadAsync(zipFile);
-
     const outZip = new JSZip();
 
     for (const fileName of Object.keys(loadedZip.files)) {
-      if (!fileName.endsWith(".png")) continue;
+      if (!fileName.toLowerCase().endsWith(".png")) continue;
 
-      const tableMatch = fileName.match(/table-(\d+)\.png/i);
-      if (!tableMatch) continue;
+      const match = fileName.match(/table-(\d+)\.png/i);
+      if (!match) continue;
 
-      const tableNum = parseInt(tableMatch[1], 10);
-      const qrPng = await loadedZip.files[fileName].async("blob");
+      const tableNum = parseInt(match[1], 10);
+      const qrPngBlob = await loadedZip.files[fileName].async("blob");
 
-      const placardBlob = await generatePlacard(qrPng, tableNum, headerText);
+      const placardBlob = await generatePlacard(qrPngBlob, tableNum, headerText);
       outZip.file(`placard-${tableNum}.png`, placardBlob);
     }
 
@@ -38,53 +40,90 @@ document.getElementById("generate-placards-btn").addEventListener("click", async
     const a = document.createElement("a");
     a.href = url;
     a.download = "Summon-Placards.zip";
+    document.body.appendChild(a);
     a.click();
+    a.remove();
     URL.revokeObjectURL(url);
 
-    status.textContent = "Placards generated!";
+    status.textContent = "Placards generated.";
   } catch (err) {
     console.error(err);
     status.textContent = "Error generating placards.";
   }
 });
 
+/**
+ * Word-wrap helper for canvas.
+ * Returns an array of lines that fit within maxWidth.
+ */
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let currentLine = "";
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine ? currentLine + " " + word : word;
+    const metrics = ctx.measureText(testLine);
+    const testWidth = metrics.width;
+
+    if (testWidth > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
 async function generatePlacard(qrBlob, tableNum, headerText) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
     canvas.width = 1200;
     canvas.height = 1800;
-
     const ctx = canvas.getContext("2d");
 
     // White background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Load QR
     const qrImg = new Image();
     qrImg.onload = () => {
-
-      // ---- EXACT YESTERDAY LAYOUT (A) ----
-      // Header font slightly larger, positioned exactly like screenshot
+      // ---- HEADER (wrapped, centered) ----
       ctx.fillStyle = "#000000";
-      ctx.font = "bold 80px Helvetica";
       ctx.textAlign = "center";
 
-      // Header ~200 px from top (visually matching your screenshot)
-      ctx.fillText(headerText, 600, 220);
+      const headerFontSize = 88;       // bigger
+      ctx.font = `bold ${headerFontSize}px Helvetica`;
 
-      // QR code ~600px wide (visually matches yesterday)
-      const qrSize = 600;
-      const qrX = (1200 - qrSize) / 2;
-      const qrY = 450; // matches the screenshot proportions
+      const maxHeaderWidth = 800;      // narrower -> forces wrap, even for default
+      const headerLines = wrapText(ctx, headerText, maxHeaderWidth);
+      const lineHeight = headerFontSize * 1.2;
 
+      // Center the block of header lines roughly near top third
+      const targetCenterY = 220;
+      const totalHeight = (headerLines.length - 1) * lineHeight;
+      const firstLineY = targetCenterY - totalHeight / 2;
+
+      headerLines.forEach((line, idx) => {
+        const y = firstLineY + idx * lineHeight;
+        ctx.fillText(line, canvas.width / 2, y);
+      });
+
+      // ---- QR CODE (centered) ----
+      const qrSize = 520;
+      const qrX = (canvas.width - qrSize) / 2;
+      const qrY = 430;
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-      // Table number small at the bottom center (unchanged from yesterday)
+      // ---- TABLE LABEL (small, bottom center) ----
       ctx.font = "bold 50px Helvetica";
-      ctx.fillText(`Table ${tableNum}`, 600, 1700);
+      const tableY = 1700;
+      ctx.fillText(`Table ${tableNum}`, canvas.width / 2, tableY);
 
-      canvas.toBlob(blob => resolve(blob), "image/png");
+      canvas.toBlob((blob) => resolve(blob), "image/png");
     };
 
     qrImg.src = URL.createObjectURL(qrBlob);
