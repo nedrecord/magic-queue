@@ -1,244 +1,111 @@
-// public/placards.js
+console.log("placards.js loaded");
 
-console.log('placards.js loaded');
+const fileInput = document.getElementById("qr-zip");
+const headerInput = document.getElementById("header-text");
+const generateBtn = document.getElementById("generate-placards-btn");
+const statusEl = document.getElementById("placard-status");
 
-const fileInput = document.getElementById('qr-zip-file');
-const headerInput = document.getElementById('placard-header');
-const styleSelect = document.getElementById('template-style');
-const generateBtn = document.getElementById('generate-placards-btn');
-const statusEl = document.getElementById('placard-status');
+// Main handler --------------------------------------------------
 
-function setStatus(msg) {
-  if (!statusEl) return;
-  statusEl.textContent = msg || '';
-}
+generateBtn.addEventListener("click", async () => {
+  statusEl.textContent = "";
 
-function getSelectedStyle() {
-  if (!styleSelect) return 'classic';
-  return styleSelect.value || 'classic';
-}
+  if (!fileInput.files || fileInput.files.length === 0) {
+    statusEl.textContent = "Choose a QR ZIP file first.";
+    return;
+  }
 
-if (generateBtn) {
-  generateBtn.addEventListener('click', async () => {
-    const file = fileInput && fileInput.files[0];
-    if (!file) {
-      alert('Choose a QR ZIP file first.');
+  const zipFile = fileInput.files[0];
+
+  try {
+    const jszip = new JSZip();
+    const loadedZip = await jszip.loadAsync(zipFile);
+
+    // Extract QR PNGs
+    const qrMap = {};
+
+    for (const filename of Object.keys(loadedZip.files)) {
+      if (filename.toLowerCase().endsWith(".png")) {
+        const match = filename.match(/table-(\d+)\.png/i);
+        if (!match) continue;
+
+        const tableNum = parseInt(match[1], 10);
+        qrMap[tableNum] = await loadedZip.file(filename).async("base64");
+      }
+    }
+
+    if (Object.keys(qrMap).length === 0) {
+      statusEl.textContent = "No valid QR PNGs found in the ZIP.";
       return;
     }
 
-    setStatus('Generating placards...');
-    generateBtn.disabled = true;
+    const headerText = headerInput.value.trim() || 
+      "Scan to have a magician visit your table";
 
-    try {
-      await generatePlacardsFromZip(file);
-      setStatus('Placards generated. Your ZIP should start downloading.');
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'Error generating placards.');
-      setStatus('Error generating placards. Check the ZIP format and try again.');
-    } finally {
-      generateBtn.disabled = false;
+    const outZip = new JSZip();
+
+    // Create each placard using a simple white background and centered QR
+    for (let table = 1; table <= 50; table++) {
+      if (!qrMap[table]) continue;
+
+      const base64QR = qrMap[table];
+      const pngData = await createPlacardPNG(table, headerText, base64QR);
+
+      outZip.file(`table-${String(table).padStart(2, "0")}.png`, pngData, {
+        base64: true
+      });
     }
-  });
-} else {
-  console.error('generate-placards-btn not found on placards page.');
-}
 
-async function generatePlacardsFromZip(file) {
-  if (typeof JSZip === 'undefined') {
-    throw new Error('JSZip failed to load in this browser.');
+    const blob = await outZip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Summon-Placards.zip";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    statusEl.textContent = "Placards generated!";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Error generating placards.";
   }
+});
 
-  const jszip = new JSZip();
-  const zip = await jszip.loadAsync(file);
+// Canvas renderer --------------------------------------------------
 
-  const outZip = new JSZip();
-  const headerText =
-    (headerInput && headerInput.value
-      ? headerInput.value
-      : 'Scan to have a magician visit your table'
-    ).trim();
+async function createPlacardPNG(tableNum, headerText, qrBase64) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1200;   // Print resolution base
+  canvas.height = 1800;
 
-  const style = getSelectedStyle();
+  const ctx = canvas.getContext("2d");
 
-  const fileNames = Object.keys(zip.files).filter((name) =>
-    /table-\d+\.png$/i.test(name)
-  );
+  // White background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (!fileNames.length) {
-    throw new Error(
-      'No QR images found. Expected files named like table-01.png, table-02.png, etc.'
-    );
-  }
+  // Header text
+  ctx.fillStyle = "#000000";
+  ctx.font = "bold 64px serif";
+  ctx.textAlign = "center";
+  ctx.fillText(headerText, canvas.width / 2, 200);
 
-  // deterministic order
-  fileNames.sort((a, b) => {
-    const ma = a.match(/table-(\d+)\.png/i);
-    const mb = b.match(/table-(\d+)\.png/i);
-    const na = ma ? parseInt(ma[1], 10) : 0;
-    const nb = mb ? parseInt(mb[1], 10) : 0;
-    return na - nb;
-  });
+  // QR Image
+  const qrImg = new Image();
+  qrImg.src = "data:image/png;base64," + qrBase64;
 
-  for (const name of fileNames) {
-    const m = name.match(/table-(\d+)\.png$/i);
-    if (!m) continue;
-    const tableNum = parseInt(m[1], 10);
+  await qrImg.decode();
 
-    const qrBlob = await zip.files[name].async('blob');
-    const qrImg = await loadImageFromBlob(qrBlob);
+  const qrSize = 700;
+  const qrX = (canvas.width - qrSize) / 2;
+  const qrY = 350;
 
-    const placardBlob = await renderPlacardPng({
-      qrImg,
-      tableNum,
-      headerText,
-      style
-    });
-
-    const outName = `placard-table-${String(tableNum).padStart(2, '0')}.png`;
-    outZip.file(outName, placardBlob);
-  }
-
-  const finalBlob = await outZip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(finalBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'Summon-Placards.zip';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-function loadImageFromBlob(blob) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = (err) => {
-      URL.revokeObjectURL(url);
-      reject(err || new Error('Failed to load QR image.'));
-    };
-    img.src = url;
-  });
-}
-
-// ---- Canvas rendering with style variations ----
-
-async function renderPlacardPng({ qrImg, tableNum, headerText, style }) {
-  const width = 1200;   // 6" wide @ ~200dpi
-  const height = 1800;  // 9" tall-ish, scales fine to 4x6
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-
-  // White background for printing
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, width, height);
-
-  const headerY = 150;
-  const qrSize = 650;
-  const qrY = (height - qrSize) / 2;
-  const tableY = height - 220;
-
-  switch (style) {
-    case 'border':
-      drawBorderStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY);
-      break;
-    case 'formal':
-      drawFormalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY);
-      break;
-    case 'minimal':
-      drawMinimalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY);
-      break;
-    case 'classic':
-    default:
-      drawClassicStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY);
-      break;
-  }
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob), 'image/png');
-  });
-}
-
-// --- template variants ---
-
-function drawClassicStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-
-  ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(headerText, width / 2, headerY);
-
-  const qrX = (width - qrSize) / 2;
   ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
-  ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
-}
+  // Table label
+  ctx.font = "48px serif";
+  ctx.fillText(`Table ${tableNum}`, canvas.width / 2, 1200);
 
-function drawBorderStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  ctx.strokeStyle = '#bbbbbb';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(40, 40, width - 80, height - 80);
-
-  ctx.beginPath();
-  ctx.moveTo(120, tableY - 40);
-  ctx.lineTo(width - 120, tableY - 40);
-  ctx.stroke();
-
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-
-  ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(headerText, width / 2, headerY);
-
-  const qrX = (width - qrSize) / 2;
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-  ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
-}
-
-function drawFormalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-
-  ctx.font = 'italic 70px "Georgia", "Times New Roman", serif';
-  ctx.fillText(headerText, width / 2, headerY);
-
-  ctx.strokeStyle = '#000000';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  const fx = width / 2;
-  const fy = headerY + 60;
-  ctx.moveTo(fx - 180, fy);
-  ctx.quadraticCurveTo(fx - 90, fy + 20, fx, fy);
-  ctx.quadraticCurveTo(fx + 90, fy - 20, fx + 180, fy);
-  ctx.stroke();
-
-  const qrX = (width - qrSize) / 2;
-  ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-  ctx.font = '48px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`Table ${tableNum}`, width / 2, tableY);
-}
-
-function drawMinimalStyle(ctx, width, height, headerText, headerY, qrImg, qrSize, qrY, tableNum, tableY) {
-  ctx.fillStyle = '#000000';
-  ctx.textAlign = 'center';
-
-  ctx.font = '600 60px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(headerText, width / 2, headerY + 20);
-
-  const qrX = (width - qrSize) / 2;
-  ctx.drawImage(qrImg, qrX, qrY + 40, qrSize, qrSize);
-
-  ctx.font = '42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-  ctx.fillText(`Table ${tableNum}`, width / 2, tableY + 10);
+  return canvas.toDataURL("image/png").replace(/^data:image\/png;base64,/, "");
 }
