@@ -1,6 +1,6 @@
 {
-  "name": "Magic Queue",
-  "short_name": "MagicQueue",
+  "name": "Summon",
+  "short_name": "Summon",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
