@@ -5,13 +5,9 @@
   <title>Magician Queue</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
-</head>
-<body>
+</head><body>
   <div class="container">
     <h1>Magic Queue</h1>
-    <h2 style="color: red; font-weight: bold; text-transform: uppercase;">
-      TEST BUILD – NO REGISTER BUTTON
-    </h2>
 
     <div id="auth-section">
       <h2>Log in</h2>
@@ -22,37 +18,39 @@
     </div>
 
     <div id="post-auth-section" class="hidden">
-      <div class="top-bar" style="align-items: center; gap: 8px; margin-bottom: 12px;">
+      <div class="top-bar" style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
         <button id="nav-queue-btn">Queue</button>
         <button id="nav-tools-btn">QR & placards</button>
-        <span style="font-size: 0.8rem; opacity: 0.8; margin-left: 8px;">
+        <span style="font-size:0.8rem; opacity:0.8; margin-left:8px;">
           Queue auto-refreshes every 30 seconds.
         </span>
+        <div style="flex:1;"></div>
+        <button id="logout-btn" style="font-size:0.8rem;">Log out</button>
       </div>
 
       <div id="queue-section">
-        <div class="top-bar" style="align-items: center; gap: 8px;">
+        <div class="top-bar" style="align-items:center; gap:8px;">
           <button id="refresh-btn">Refresh now</button>
         </div>
 
-        <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+        <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
           <button id="pause-btn">Pause queue</button>
-          <span id="pause-status" style="font-size: 0.85rem; opacity: 0.9;">Queue is live.</span>
+          <span id="pause-status" style="font-size:0.85rem; opacity:0.9;">Queue is live.</span>
         </div>
 
-        <ul id="queue-list" style="margin-top: 12px;"></ul>
+        <ul id="queue-list" style="margin-top:12px;"></ul>
       </div>
 
       <div id="tools-section" class="hidden">
         <h2>QR & placard tools</h2>
-        <p style="font-size: 0.9rem; line-height: 1.4;">
+        <p style="font-size:0.9rem; line-height:1.4;">
           Use these tools to set up your table signage. You only need to do this when you start at a new venue or
           if you change your tipping details.
         </p>
 
         <button id="download-qrs-btn-tools">Download summon QR ZIP</button>
 
-        <p style="margin-top: 16px; font-size: 0.9rem;">
+        <p style="margin-top:16px; font-size:0.9rem;">
           Need printable table cards?
           <a href="/public/placards.html">Open placard generator</a>.
         </p>
