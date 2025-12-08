@@ -57,9 +57,7 @@ function setActiveSection(name) {
 function startAutoRefresh() {
   if (autoRefreshInterval) return;
   autoRefreshInterval = setInterval(() => {
-    if (authToken) {
-      loadQueue();
-    }
+    if (authToken) loadQueue();
   }, 30000);
 }
 
@@ -76,8 +74,7 @@ function updatePauseUI() {
   if (!pauseBtn || !pauseStatus) return;
   if (isPaused) {
     pauseBtn.textContent = 'Resume queue';
-    pauseStatus.textContent =
-      'Queue is paused. Guests see a brief pause message when they scan.';
+    pauseStatus.textContent = 'Queue is paused. Guests see a brief pause message when they scan.';
   } else {
     pauseBtn.textContent = 'Pause queue';
     pauseStatus.textContent = 'Queue is live.';
@@ -136,7 +133,6 @@ loginBtn.addEventListener('click', async () => {
     authToken = data.token;
     localStorage.setItem(TOKEN_KEY, authToken);
 
-    authMessage.textContent = 'Logged in.';
     authSection.classList.add('hidden');
     postAuthSection.classList.remove('hidden');
     menuBtn.classList.remove('hidden');
@@ -156,20 +152,16 @@ loginBtn.addEventListener('click', async () => {
 // ---------- Menu behaviour ----------
 
 menuBtn.addEventListener('click', () => {
-  if (!menuPanel) return;
   const isHidden = menuPanel.classList.contains('hidden');
-  if (isHidden) {
-    menuPanel.classList.remove('hidden');
-  } else {
-    menuPanel.classList.add('hidden');
-  }
+  if (isHidden) menuPanel.classList.remove('hidden');
+  else menuPanel.classList.add('hidden');
 });
 
 menuItems.forEach((btn) => {
   btn.addEventListener('click', () => {
     const target = btn.getAttribute('data-target') || 'queue';
     setActiveSection(target);
-    if (menuPanel) menuPanel.classList.add('hidden');
+    menuPanel.classList.add('hidden');
   });
 });
 
@@ -226,22 +218,18 @@ function performLogout(silent = false) {
     passwordInput.value = '';
   }
 
-  if (menuPanel) menuPanel.classList.add('hidden');
+  menuPanel.classList.add('hidden');
   menuBtn.classList.add('hidden');
 }
 
-logoutBtn.addEventListener('click', () => {
-  performLogout(false);
-});
+logoutBtn.addEventListener('click', () => performLogout(false));
 
 // ---------- Load queue ----------
 
 async function loadQueue() {
   if (!authToken) return;
 
-  if (queueList) {
-    queueList.innerHTML = '<li>Loading...</li>';
-  }
+  queueList.innerHTML = '<li>Loading...</li>';
 
   try {
     const res = await fetch('/api/queue', {
@@ -250,16 +238,13 @@ async function loadQueue() {
     const data = await res.json();
 
     if (!res.ok) {
-      if (queueList) {
-        queueList.innerHTML = `<li>Error: ${data.error || 'Failed to load'}</li>`;
-      }
+      queueList.innerHTML = `<li>Error: ${data.error || 'Failed to load'}</li>`;
       return;
     }
 
     isPaused = !!data.paused;
     updatePauseUI();
 
-    if (!queueList) return;
     queueList.innerHTML = '';
 
     if (!data.summons || data.summons.length === 0) {
@@ -280,14 +265,11 @@ async function loadQueue() {
 
       li.appendChild(label);
       li.appendChild(btn);
-
       queueList.appendChild(li);
     });
   } catch (err) {
     console.error(err);
-    if (queueList) {
-      queueList.innerHTML = '<li>Network error.</li>';
-    }
+    queueList.innerHTML = '<li>Network error.</li>';
   }
 }
 
@@ -305,11 +287,13 @@ async function clearTable(tableNumber) {
       },
       body: JSON.stringify({ table_number: tableNumber })
     });
+
     const data = await res.json();
     if (!res.ok) {
       alert(data.error || 'Failed to clear table');
       return;
     }
+
     await loadQueue();
   } catch (err) {
     console.error(err);
@@ -331,9 +315,7 @@ async function downloadQrs() {
 
   try {
     const res = await fetch('/api/qrs/raw', {
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
+      headers: { Authorization: `Bearer ${authToken}` }
     });
 
     if (!res.ok) {
@@ -344,12 +326,14 @@ async function downloadQrs() {
 
     const blob = await res.blob();
     const url = window.URL.createObjectURL(blob);
+
     const a = document.createElement('a');
     a.href = url;
     a.download = 'Summon-QRs.zip';
     document.body.appendChild(a);
     a.click();
     a.remove();
+
     window.URL.revokeObjectURL(url);
   } catch (err) {
     console.error(err);
@@ -360,15 +344,14 @@ async function downloadQrs() {
   }
 }
 
-// ---------- Account info ----------
+// ---------- Account info (Stripe Integration Placeholder) ----------
 
 async function loadAccountInfo() {
   if (!authToken) return;
+
   try {
     const res = await fetch('/api/me', {
-      headers: {
-        Authorization: `Bearer ${authToken}`
-      }
+      headers: { Authorization: `Bearer ${authToken}` }
     });
 
     const data = await res.json();
@@ -383,26 +366,26 @@ async function loadAccountInfo() {
 
     if (accountSubscription) {
       const status = data.subscription_status || 'unsubscribed';
-      const price = data.subscription_price_id;
+      const price = data.subscription_price_id || null;
 
       let label = 'Not subscribed';
 
       if (status === 'active') {
-        if (price === 'your_20_dollar_price_id_here') {
+        if (price === 'price_1ScDKIIhBTTPvNHfuBEnoSA8') {
           label = 'Active – Early Adopter ($20/year)';
-        } else if (price === 'your_25_dollar_price_id_here') {
+        } else if (price === 'price_1ScDFIIhBTTPvNHfAAgjmPV1') {
           label = 'Active – Standard ($25/year)';
-        } else if (price === 'your_free_price_id_here') {
-          label = 'Active – Free Tier';
+        } else if (price === 'price_1ScDKcIhBTTPvNHfIj5rL0Zr') {
+          label = 'Active – Comp / Free Account';
         } else {
-          label = 'Active – Subscription';
+          label = 'Active subscription';
         }
       }
 
       accountSubscription.textContent = label;
     }
   } catch (err) {
-    console.error('Failed to load account info', err);
+    console.error('Account info error:', err);
   }
 }
 
