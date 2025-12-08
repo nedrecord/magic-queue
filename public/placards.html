@@ -2,61 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Placard Generator – Summon</title>
+  <title>Placard Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
 </head>
 
-<body>
-  <div class="container" style="max-width: 700px; text-align: center;">
-    
+<body class="placard-body">
+  <div class="placard-container">
+
     <h1>Placard Generator</h1>
 
-    <p style="margin-top: 16px; margin-bottom: 24px;">
-      Upload your QR code ZIP and we’ll generate one printable placard PNG per table.
+    <p class="placard-subtitle">
+      Upload your QR code ZIP file and we’ll create one printable placard for each table.
     </p>
 
-    <!-- ZIP upload -->
-    <div style="margin-bottom: 26px; text-align: center;">
-      <label for="qr-zip-file" style="display:block; margin-bottom:6px;">QR ZIP file</label>
-      <input id="qr-zip-file" type="file" accept=".zip" style="width:100%;">
-    </div>
+    <form id="placard-form">
 
-    <!-- Header text -->
-    <div style="margin-bottom: 26px;">
-      <label for="placard-header" style="display:block; margin-bottom:6px;">Header text (optional)</label>
-      <input id="placard-header" type="text" value="Scan to have a magician visit your table" style="width:100%;">
-      <p style="margin-top:6px; font-size:0.9rem; opacity:0.8;">
-        Leave this as is, or type your own message to appear at the top of each placard.
-      </p>
-    </div>
+      <div class="form-row center">
+        <label for="qr-zip" class="form-label">QR ZIP File</label>
+        <input type="file" id="qr-zip" accept=".zip" class="file-input">
+      </div>
 
-    <!-- Style dropdown -->
-    <div style="margin-bottom: 30px;">
-      <label for="template-style" style="display:block; margin-bottom:6px;">Placard style</label>
-      <select id="template-style" style="width:100%; padding:10px;">
-        <option value="classic" selected>Classic (clean)</option>
-        <option value="border">Bordered</option>
-        <option value="formal">Formal script</option>
-        <option value="minimal">Minimal</option>
-      </select>
-    </div>
+      <div class="form-row center">
+        <label for="header-text" class="form-label">Header text (optional)</label>
+        <input
+          type="text"
+          id="header-text"
+          class="text-input"
+          placeholder="Scan to have a magician visit your table"
+        >
+        <p class="helper-text center">
+          Leave this as is, or type your own message for the top of each placard.
+        </p>
+      </div>
 
-    <button id="generate-placards-btn" class="primary-btn" style="margin-bottom:12px;">
-      Generate placard ZIP
-    </button>
+      <button type="button" id="generate-placards-btn" class="primary-btn">
+        Generate Placard ZIP
+      </button>
 
-    <p id="placard-status" style="margin-top: 8px; min-height: 1.2em;"></p>
+      <p id="placard-status" class="status-message center"></p>
+    </form>
 
-    <button class="secondary-btn" style="margin-top: 24px;" onclick="window.location='/dashboard'">
-      Back to dashboard
-    </button>
+    <a href="/dashboard" class="secondary-btn back-btn">
+      Back to Dashboard
+    </a>
+
   </div>
 
-  <!-- FIXED: load JSZip FIRST -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <!-- Then your generator logic -->
   <script src="/public/placards.js"></script>
 </body>
 </html>
