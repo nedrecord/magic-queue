@@ -2,86 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Table placards</title>
+  <title>Summon – Placard generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/public/style.css">
-  <style>
-    .placard-page {
-      max-width: 480px;
-      margin: 0 auto;
-      padding-top: 24px;
-    }
-    .placard-page h1 {
-      text-align: center;
-      margin-bottom: 16px;
-      font-size: 1.6rem;
-      letter-spacing: 0.08em;
-    }
-    .placard-form label {
-      display: block;
-      margin-bottom: 12px;
-      font-size: 0.95rem;
-    }
-    .placard-form input[type="text"],
-    .placard-form input[type="file"] {
-      width: 100%;
-      margin-top: 4px;
-      padding: 8px 10px;
-      border-radius: 4px;
-      border: 1px solid #444;
-      background: #111;
-      color: #f5f5f5;
-      box-sizing: border-box;
-    }
-    .placard-form button {
-      margin-top: 16px;
-      width: 100%;
-    }
-    #placard-status {
-      margin-top: 10px;
-      font-size: 0.9rem;
-      text-align: center;
-      min-height: 1.2em;
-    }
-    .placard-note {
-      margin-top: 18px;
-      font-size: 0.85rem;
-      text-align: center;
-      opacity: 0.75;
-    }
-  </style>
 </head>
 <body>
-  <div class="container placard-page">
-    <h1>TABLE PLACARDS</h1>
+  <div class="container">
+    <h1>Placard generator</h1>
 
-    <div class="placard-form">
-      <label>
-        QR ZIP from Summon
-        <input id="placard-zip-file" type="file" accept=".zip">
-      </label>
+    <p style="margin-bottom: 16px;">
+      Upload the ZIP of your <strong>table-XX.png</strong> QR codes and we’ll generate
+      one printable placard PNG per table.
+    </p>
 
-      <label>
+    <div class="card">
+      <label for="placard-zip-file" class="field-label">QR ZIP file</label>
+      <input id="placard-zip-file" type="file" accept=".zip">
+
+      <label for="placard-header" class="field-label" style="margin-top:12px;">
         Header text
-        <input
-          id="placard-header"
-          type="text"
-          maxlength="80"
-          value="Scan to have a magician visit your table"
-        >
       </label>
+      <input
+        id="placard-header"
+        type="text"
+        placeholder="Scan to have a magician visit your table"
+      >
 
-      <button id="placard-generate-batch-btn" class="primary-btn">
+      <button id="placard-generate-batch-btn" class="primary-btn" style="margin-top:16px;">
         Generate placard ZIP
       </button>
 
-      <p id="placard-status"></p>
-      <p class="placard-note">
-        Upload the QR ZIP from the dashboard. You’ll get a new ZIP with 4×6 placards (one PNG per table).
-      </p>
+      <p id="placard-status" class="status-text" style="margin-top:10px;"></p>
     </div>
 
-    <!-- Offscreen canvas used to render the card -->
+    <!-- Hidden canvas used for 4x6 layout rendering -->
     <canvas
       id="placard-canvas"
       width="1200"
@@ -90,12 +44,8 @@
     ></canvas>
   </div>
 
-  <!-- JSZip from CDN (client-side only, no server change needed) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"
-          integrity="sha512-4JnOVJ69ikVVNr5+1zU63u+3kOynf43g0HsC4VxBm/I3fHut4P7h6v0Dd3Xk6U1sl6ejpa7X+JErFqvOppN3sA=="
-          crossorigin="anonymous"
-          referrerpolicy="no-referrer"></script>
-
+  <!-- JSZip must load BEFORE placards.js -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="/public/placards.js"></script>
 </body>
 </html>
