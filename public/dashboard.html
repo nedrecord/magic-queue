@@ -23,68 +23,41 @@
 
     <!-- After login -->
     <div id="post-auth-section" class="hidden">
-
       <!-- Tabs -->
       <div class="tabs-row">
         <button id="nav-queue-btn" class="active-tab">Queue</button>
         <button id="nav-tools-btn">QR &amp; Placards</button>
       </div>
 
-      <!-- Queue view -->
+      <!-- Queue VIEW -->
       <div id="queue-section">
         <ul id="queue-list"></ul>
 
         <div class="pause-block">
           <button id="pause-btn" class="action-btn">Pause queue</button>
-          <div id="pause-status" style="margin-top:6px;">Queue is live.</div>
+          <div id="pause-status" style="margin-top:8px;">Queue is live.</div>
         </div>
 
-        <div class="queue-buttons">
-          <button id="refresh-btn">Refresh now</button>
-        </div>
+        <button id="refresh-btn" class="action-btn">Refresh now</button>
 
         <p class="auto-refresh-note">Queue auto-refreshes every 30 seconds.</p>
       </div>
 
-
-      <!-- Tools view -->
+      <!-- Tools VIEW -->
       <div id="tools-section" class="hidden">
-
         <h2>QR &amp; Placard Tools</h2>
 
-        <!-- Download QR ZIP -->
         <button id="download-qrs-btn-tools" class="action-btn">
-          Download summon QR ZIP (1–50)
+          Download QR ZIP (50 PNGs)
         </button>
 
-        <!-- Placard header input -->
-        <div class="placard-settings">
-          <label for="placard-header-input">Placard header text:</label>
-          <input id="placard-header-input" type="text"
-                 placeholder="Scan to have a magician visit your table.">
-        </div>
-
-        <!-- Upload ZIP of QR codes -->
-        <div class="placard-upload-block">
-          <p>Upload your QR ZIP (generated above) to auto-fill placards:</p>
-          <input id="placard-zip-input" type="file" accept=".zip">
-        </div>
-
-        <!-- Generate placards button -->
-        <button id="generate-placards-btn" class="action-btn">
-          Generate placards
-        </button>
-
-        <!-- Where PNGs will be shown for download -->
-        <div id="placard-results" class="placard-results"></div>
-
+        <p class="tools-link" style="margin-top:20px;">
+          Need printable table cards?<br>
+          <a href="/public/placards.html">Open placard generator</a>
+        </p>
       </div>
 
-      <!-- Logout at bottom -->
-      <div class="logout-row">
-        <button id="logout-btn">Log out</button>
-      </div>
-
+      <button id="logout-btn" class="logout-btn">Log out</button>
     </div>
   </div>
 
