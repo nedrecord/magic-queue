@@ -116,12 +116,12 @@ async function generatePlacard(qrBlob, tableNum, headerText) {
       // ---- QR CODE (centered, moved down) ----
       const qrSize = 520;
       const qrX = (canvas.width - qrSize) / 2;
-      const qrY = 520; // was 430 – more space under header, less huge gap above table text
+      const qrY = 700; // was 430 – more space under header, less huge gap above table text
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
       // ---- TABLE LABEL (smaller, moved up) ----
-      ctx.font = "bold 40px Helvetica"; // was 50px
-      const tableY = 1600;              // was 1700
+      ctx.font = "bold 30px Helvetica"; // was 50px
+      const tableY = 1700;              // was 1700
       ctx.fillText(`Table ${tableNum}`, canvas.width / 2, tableY);
 
       canvas.toBlob((blob) => resolve(blob), "image/png");
