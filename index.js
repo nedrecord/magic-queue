@@ -217,7 +217,7 @@ app.get('/api/qrs/raw', authRequired, async (req, res) => {
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="magic-queue-qrs.zip"'
+      'attachment; filename="Summon-QRs.zip"'
     );
 
     const archive = archiver('zip', { zlib: { level: 9 } });
