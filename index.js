@@ -13,6 +13,9 @@ const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || null;
 
+// patron-side assets (all in /public)
+const PATRON_BG_FILE = 'background.jpg';   // change this if your JPG has a different name
+
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -120,14 +123,14 @@ app.get('/api/me', authRequired, async (req, res) => {
 
   try {
     const row = await db.get(
-  `SELECT id, email,
-          subscription_status,
-          subscription_price_id,
-          subscription_renewal_at
-   FROM magicians
-   WHERE id = $1`,
-  [id]
-);
+      `SELECT id, email,
+              subscription_status,
+              subscription_price_id,
+              subscription_renewal_at
+       FROM magicians
+       WHERE id = $1`,
+      [id]
+    );
 
     if (!row) {
       return res.status(404).json({ error: 'Magician not found' });
@@ -338,27 +341,24 @@ app.get('/summon', async (req, res) => {
 
     const paused = !!magician.paused;
 
-    // 4) Decide which state to show
-    let headline;
-    let subtext = '';
+    // 4) Decide which overlay PNG to show
+    // patron1.png = "The magician will be with you shortly" (front of queue)
+    // patron2.png = "Request passed, a few tables ahead"
+    // patron3.png = "Magic is taking a brief pause"
+    let overlayFile = 'patron1.png';
 
     if (paused) {
-      // STATE 3 – paused
-      headline = 'The magic is taking a brief pause.';
-      subtext = 'The magician will visit your table when they return.';
+      overlayFile = 'patron3.png';
+    } else if (position > 1 || position === -1) {
+      // >1 means 3rd, 4th, etc in line.
+      // -1 fallback: couldn't find them, treat as "few tables ahead"
+      overlayFile = 'patron2.png';
     } else {
-      if (position <= 1 && position !== -1) {
-        // STATE 1 – very close in line (first or second in queue)
-        headline = 'The magician will be with you shortly.';
-        subtext = ''; // no subtext for state 1
-      } else {
-        // STATE 2 – some tables ahead
-        headline = 'Your request has been passed to the magician.';
-        subtext = 'There are a few tables ahead of you, but they’ll be with you soon.';
-      }
+      // position 0 or 1 => very close in line
+      overlayFile = 'patron1.png';
     }
 
-    // 5) Simple patron-facing page
+    // 5) Patron-facing page that shows background + overlay PNG
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -367,53 +367,37 @@ app.get('/summon', async (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #111111;
-      color: #f3f3f3;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      text-align: center;
-      padding: 48px 24px;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background: #000 url('/public/${PATRON_BG_FILE}') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .headline {
-      font-family: "Snell Roundhand", "Brush Script MT", "Segoe Script",
-                   "Comic Sans MS", cursive;
-      font-size: 1.9rem;
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      line-height: 1.4;
-      margin: 0 auto 16px auto;
-      max-width: 22ch;
+    .overlay-wrapper {
+      width: 100%;
+      max-width: 480px;
+      padding: 16px;
     }
 
-    .subtext {
-      font-size: 0.95rem;
-      line-height: 1.5;
-      opacity: 0.9;
-      margin: 0 auto 20px auto;
-      max-width: 28ch;
-    }
-
-    .flourish {
-      margin-top: 12px;
-      display: inline-block;
-      opacity: 0.9;
+    .overlay-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
     }
   </style>
 </head>
 <body>
-  <p class="headline">${headline}</p>
-  ${subtext ? `<p class="subtext">${subtext}</p>` : ''}
-  <div class="flourish">
-    <svg width="200" height="40" viewBox="0 0 200 40">
-      <path
-        d="M10 25 Q 50 5 90 25 T 170 25"
-        stroke="#b00000"
-        stroke-width="3"
-        fill="none"
-        stroke-linecap="round"
-      />
-    </svg>
+  <div class="overlay-wrapper">
+    <img src="/public/${overlayFile}" alt="Summon status" />
   </div>
 </body>
 </html>`;
