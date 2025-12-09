@@ -78,20 +78,33 @@
       </div>
 
       <!-- Account view -->
-      <div id="account-section" class="hidden">
+            <div id="account-section" class="hidden">
         <h2>Account</h2>
+      
         <div class="account-line">
           <span class="account-label">Email</span>
           <span id="account-email" class="account-value">Loading…</span>
         </div>
-
+      
         <div class="account-line">
           <span class="account-label">Subscription</span>
           <span id="account-subscription" class="account-value">
-            Early access beta – subscription not enforced yet.
+            Not subscribed
           </span>
         </div>
-
+      
+        <!-- Subscribe button -->
+        <div class="logout-row">
+          <button
+            id="subscribe-btn"
+            class="action-btn"
+            type="button"
+            onclick="window.open('YOUR_STRIPE_PAYMENT_LINK_URL_HERE', '_blank')"
+          >
+            Subscribe to Summon – $25/year
+          </button>
+        </div>
+      
         <div class="logout-row">
           <button id="logout-btn" class="danger-btn">Log out</button>
         </div>
