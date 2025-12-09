@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Summon FAQ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/public/style.css">
+</head>
+<body class="faq-body">
+  <div class="faq-container">
+    <h1>Summon FAQ</h1>
+    <p class="faq-intro">
+      Answers to common questions about using Summon at the table.
+    </p>
+
+    <!-- How Summon Works -->
+    <section class="faq-section">
+      <h2 class="faq-section-title">How Summon Works</h2>
+
+      <h3 class="faq-question">1. What is Summon?</h3>
+      <p>
+        A simple table request system for magicians. People scan a code and you
+        receive their table number in your queue.
+      </p>
+
+      <h3 class="faq-question">2. Do people need to install anything?</h3>
+      <p>
+        No. A phone camera and browser are all that’s required.
+      </p>
+
+      <h3 class="faq-question">3. Does Summon require an internet connection?</h3>
+      <p>
+        Yes. Summon is web based. Your device needs WiFi or cellular data for
+        requests to appear.
+      </p>
+
+      <h3 class="faq-question">4. What if someone has weak signal?</h3>
+      <p>
+        If they can load the summon page once, the message displays. They only
+        need enough service to reach that page.
+      </p>
+
+      <h3 class="faq-question">5. Can Summon be used offline?</h3>
+      <p>
+        No. Real-time requests require an active connection.
+      </p>
+    </section>
+
+    <!-- QR Codes and Table Requests -->
+    <section class="faq-section">
+      <h2 class="faq-section-title">QR Codes and Table Requests</h2>
+
+      <h3 class="faq-question">6. How many tables can Summon handle?</h3>
+      <p>
+        Up to 50. Each table has a unique QR code.
+      </p>
+
+      <h3 class="faq-question">7. What happens when someone scans the QR?</h3>
+      <p>
+        Their table number enters your queue, timestamped and sorted oldest to newest.
+      </p>
+
+      <h3 class="faq-question">8. What happens if someone keeps scanning repeatedly?</h3>
+      <p>
+        Only that table’s timestamp updates. A spammer would effectively move
+        themselves down the queue as newer tables come in.
+      </p>
+
+      <h3 class="faq-question">9. What does “Pause Queue” do?</h3>
+      <p>
+        It stops new requests and shows a short “brief pause” message instead
+        of the normal confirmation.
+      </p>
+
+      <h3 class="faq-question">10. How do I clear a table after visiting them?</h3>
+      <p>
+        Tap “Done” next to that table in the queue.
+      </p>
+
+      <h3 class="faq-question">11. Can multiple magicians use Summon in the same venue?</h3>
+      <p>
+        Yes, as long as each magician has their own account. They’ll need to
+        coordinate their own table numbering.
+      </p>
+    </section>
+
+    <!-- QR Codes, Printing, Placard Generator -->
+    <section class="faq-section">
+      <h2 class="faq-section-title">QR Codes, Printing, and the Placard Generator</h2>
+
+      <h3 class="faq-question">12. What are the QR codes for?</h3>
+      <p>
+        They route table requests into your queue.
+      </p>
+
+      <h3 class="faq-question">13. Can I re-download my QR codes later?</h3>
+      <p>
+        No. Summon does not store your QR images. If you lose them, you must
+        generate new ones.
+      </p>
+
+      <h3 class="faq-question">14. What is the Placard Generator?</h3>
+      <p>
+        Many performers aren’t design-savvy, so Summon includes a simple tool
+        that creates clean, printable table cards from your QR ZIP.
+      </p>
+
+      <h3 class="faq-question">15. I prefer to design my own signage. Is that allowed?</h3>
+      <p>
+        Of course. The Placard Generator is optional.
+      </p>
+
+      <h3 class="faq-question">16. What if someone scans one of my signs outside the venue?</h3>
+      <p>
+        It still triggers a table request. You should generally collect your
+        placards after the gig unless the venue prints and manages their own signage.
+      </p>
+    </section>
+
+    <!-- Subscription and Billing -->
+    <section class="faq-section">
+      <h2 class="faq-section-title">Subscription and Billing</h2>
+
+      <h3 class="faq-question">17. How do I manage my subscription?</h3>
+      <p>
+        The Account page shows your email, subscription status, and renewal details.
+      </p>
+
+      <h3 class="faq-question">18. What happens when my subscription expires?</h3>
+      <p>
+        Your account becomes “Not subscribed” and the queue will not accept new
+        table requests until you renew.
+      </p>
+
+      <h3 class="faq-question">19. Can Summon be used by a venue that hires different magicians?</h3>
+      <p>
+        Yes, but each magician still needs their own individual account. Summon
+        is currently structured around performer accounts rather than venue-wide logins.
+      </p>
+    </section>
+
+    <!-- Data and Privacy -->
+    <section class="faq-section">
+      <h2 class="faq-section-title">Data and Privacy</h2>
+
+      <h3 class="faq-question">20. Does Summon sell or share data?</h3>
+      <p>
+        No. Only minimal operational data is stored, and none is sold or shared.
+      </p>
+    </section>
+
+    <button class="secondary-btn back-btn" onclick="window.location.href='/dashboard'">
+      Back to dashboard
+    </button>
+  </div>
+</body>
+</html>
