@@ -691,3 +691,10 @@ body.placard-page {
   line-height: 1.5;
   opacity: 0.92;
 }
+
+.summon-logo {
+  width: 140px;
+  max-width: 40vw;
+  margin: 0 auto 20px;
+  display: block;
+}
