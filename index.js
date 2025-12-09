@@ -297,6 +297,7 @@ app.get('/summon', async (req, res) => {
   }
 
   try {
+    // 1) Look up magician (for paused flag)
     const magician = await db.get(
       'SELECT id, paused FROM magicians WHERE id = $1',
       [m]
@@ -307,6 +308,7 @@ app.get('/summon', async (req, res) => {
 
     const now = Date.now();
 
+    // 2) Insert or update this table's summon record
     await db.run(
       `
       INSERT INTO summons (magician_id, table_number, last_requested_at)
@@ -317,12 +319,46 @@ app.get('/summon', async (req, res) => {
       [m, t, now]
     );
 
+    // 3) Pull the full queue so we can see where this table sits
+    const summons = await db.all(
+      `
+      SELECT table_number
+      FROM summons
+      WHERE magician_id = $1
+      ORDER BY last_requested_at ASC
+      `,
+      [m]
+    );
+
+    // Zero-based position of this table in the queue
+    let position = -1;
+    if (summons && summons.length > 0) {
+      position = summons.findIndex(row => row.table_number === t);
+    }
+
     const paused = !!magician.paused;
 
-    const liveMsg = 'Your Request Has Been Passed to the Magician';
-    const pausedMsg =
-      'The Magician is Taking a Brief Pause';
+    // 4) Decide which state to show
+    let headline;
+    let subtext = '';
 
+    if (paused) {
+      // STATE 3 – paused
+      headline = 'The magic is taking a brief pause.';
+      subtext = 'The magician will visit your table when they return.';
+    } else {
+      if (position <= 1 && position !== -1) {
+        // STATE 1 – very close in line (first or second in queue)
+        headline = 'The magician will be with you shortly.';
+        subtext = ''; // no subtext for state 1
+      } else {
+        // STATE 2 – some tables ahead
+        headline = 'Your request has been passed to the magician.';
+        subtext = 'There are a few tables ahead of you, but they’ll be with you soon.';
+      }
+    }
+
+    // 5) Simple patron-facing page
     const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -339,15 +375,23 @@ app.get('/summon', async (req, res) => {
       padding: 48px 24px;
     }
 
-    .line {
+    .headline {
       font-family: "Snell Roundhand", "Brush Script MT", "Segoe Script",
                    "Comic Sans MS", cursive;
       font-size: 1.9rem;
       font-weight: 500;
       letter-spacing: 0.03em;
       line-height: 1.4;
-      margin: 0 auto 24px auto;
+      margin: 0 auto 16px auto;
       max-width: 22ch;
+    }
+
+    .subtext {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      opacity: 0.9;
+      margin: 0 auto 20px auto;
+      max-width: 28ch;
     }
 
     .flourish {
@@ -358,7 +402,8 @@ app.get('/summon', async (req, res) => {
   </style>
 </head>
 <body>
-  <p class="line">${paused ? pausedMsg : liveMsg}</p>
+  <p class="headline">${headline}</p>
+  ${subtext ? `<p class="subtext">${subtext}</p>` : ''}
   <div class="flourish">
     <svg width="200" height="40" viewBox="0 0 200 40">
       <path
