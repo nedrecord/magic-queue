@@ -14,7 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const ADMIN_SECRET = process.env.ADMIN_SECRET || null;
 
 // patron-side assets (all in /public)
-const PATRON_BG_FILE = 'background.jpg';   // change this if your JPG has a different name
+const PATRON_BG_FILE = 'BACKGROUND.jpg';   // change this if your JPG has a different name
 
 app.use(cors());
 app.use(bodyParser.json());
